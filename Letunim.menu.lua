@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (БЕЛАЯ НАКЛОННАЯ L)
+--  LETUNIUM HUB (УГЛЫ ТОЛЬКО У ВКЛАДОК)
 --  by Tormentor412
 -- ============================================================
 
@@ -31,7 +31,7 @@ game:GetService("Debris"):AddItem(hello, 1.5)
 wait(1.5)
 
 -- ============================================================
---  ОСНОВНОЕ МЕНЮ (МЯГКИЕ УГЛЫ)
+--  ОСНОВНОЕ МЕНЮ (ПРЯМЫЕ УГЛЫ)
 -- ============================================================
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 760, 0, 400)
@@ -44,12 +44,8 @@ frame.Draggable = true
 frame.ClipsDescendants = true
 frame.Parent = gui
 
-local corners = Instance.new("UICorner")
-corners.CornerRadius = UDim.new(0, 20)
-corners.Parent = frame
-
 -- ============================================================
---  ЗАГОЛОВОК
+--  ЗАГОЛОВОК (ПРЯМЫЕ УГЛЫ)
 -- ============================================================
 local header = Instance.new("Frame")
 header.Size = UDim2.new(1, 0, 0, 55)
@@ -58,17 +54,13 @@ header.BackgroundTransparency = 0.1
 header.BorderSizePixel = 0
 header.Parent = frame
 
-local headerCorners = Instance.new("UICorner")
-headerCorners.CornerRadius = UDim.new(0, 20)
-headerCorners.Parent = header
-
 -- ===== БЕЛАЯ НАКЛОННАЯ БУКВА "L" =====
 local logoLetter = Instance.new("TextLabel")
 logoLetter.Size = UDim2.new(0, 40, 0, 40)
 logoLetter.Position = UDim2.new(0.02, 0, 0.5, -20)
 logoLetter.BackgroundTransparency = 1
 logoLetter.Text = "L"
-logoLetter.TextColor3 = Color3.fromRGB(255, 255, 255)  -- БЕЛАЯ
+logoLetter.TextColor3 = Color3.fromRGB(255, 255, 255)
 logoLetter.TextSize = 38
 logoLetter.Font = Enum.Font.GothamBold
 logoLetter.Rotation = -12
@@ -121,7 +113,7 @@ mButton.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================
---  КОНТЕЙНЕР ДЛЯ КОНТЕНТА
+--  КОНТЕЙНЕР ДЛЯ КОНТЕНТА (ПРЯМЫЕ УГЛЫ)
 -- ============================================================
 local contentPanel = Instance.new("Frame")
 contentPanel.Size = UDim2.new(1, 0, 1, -105)
@@ -131,12 +123,8 @@ contentPanel.BackgroundTransparency = 0.05
 contentPanel.BorderSizePixel = 0
 contentPanel.Parent = frame
 
-local contentCorners = Instance.new("UICorner")
-contentCorners.CornerRadius = UDim.new(0, 20)
-contentCorners.Parent = contentPanel
-
 -- ============================================================
---  НИЖНЯЯ ПАНЕЛЬ С ВКЛАДКАМИ
+--  НИЖНЯЯ ПАНЕЛЬ С ВКЛАДКАМИ (ПРЯМЫЕ УГЛЫ)
 -- ============================================================
 local bottomBar = Instance.new("Frame")
 bottomBar.Size = UDim2.new(1, 0, 0, 50)
@@ -146,12 +134,8 @@ bottomBar.BackgroundTransparency = 0.1
 bottomBar.BorderSizePixel = 0
 bottomBar.Parent = frame
 
-local bottomCorners = Instance.new("UICorner")
-bottomCorners.CornerRadius = UDim.new(0, 20)
-bottomCorners.Parent = bottomBar
-
 -- ============================================================
---  ВКЛАДКИ
+--  ВКЛАДКИ (СМЯГЧЁННЫЕ УГЛЫ)
 -- ============================================================
 local tabNames = {"VISUALS", "AIMBOT", "FUNCTIONS"}
 local tabButtons = {}
@@ -172,6 +156,11 @@ for i, tabName in ipairs(tabNames) do
     btn.Parent = bottomBar
     tabButtons[i] = btn
 
+    -- СКРУГЛЕНИЕ УГЛОВ У КАЖДОЙ ВКЛАДКИ
+    local btnCorners = Instance.new("UICorner")
+    btnCorners.CornerRadius = UDim.new(0, 10)
+    btnCorners.Parent = btn
+
     local underline = Instance.new("Frame")
     underline.Size = UDim2.new(0.4, 0, 0, 3)
     underline.Position = UDim2.new(0.3, 0, 1, -3)
@@ -191,9 +180,10 @@ for i, tabName in ipairs(tabNames) do
     content.Parent = contentPanel
     contentFrames[i] = content
 
-    local contentCorners2 = Instance.new("UICorner")
-    contentCorners2.CornerRadius = UDim.new(0, 10)
-    contentCorners2.Parent = content
+    -- СКРУГЛЕНИЕ УГЛОВ У КОНТЕНТА ВКЛАДКИ
+    local contentCorners = Instance.new("UICorner")
+    contentCorners.CornerRadius = UDim.new(0, 10)
+    contentCorners.Parent = content
 
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, 0, 1, 0)
