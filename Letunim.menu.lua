@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (СТИЛЬНЫЙ ЛОГОТИП + НАЗВАНИЕ)
+--  LETUNIUM HUB (БЕЛАЯ НАКЛОННАЯ L)
 --  by Tormentor412
 -- ============================================================
 
@@ -31,7 +31,7 @@ game:GetService("Debris"):AddItem(hello, 1.5)
 wait(1.5)
 
 -- ============================================================
---  ОСНОВНОЕ МЕНЮ
+--  ОСНОВНОЕ МЕНЮ (МЯГКИЕ УГЛЫ)
 -- ============================================================
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 760, 0, 400)
@@ -45,11 +45,11 @@ frame.ClipsDescendants = true
 frame.Parent = gui
 
 local corners = Instance.new("UICorner")
-corners.CornerRadius = UDim.new(0, 16)
+corners.CornerRadius = UDim.new(0, 20)
 corners.Parent = frame
 
 -- ============================================================
---  ЗАГОЛОВОК (ЛОГОТИП + НАЗВАНИЕ)
+--  ЗАГОЛОВОК
 -- ============================================================
 local header = Instance.new("Frame")
 header.Size = UDim2.new(1, 0, 0, 55)
@@ -59,44 +59,27 @@ header.BorderSizePixel = 0
 header.Parent = frame
 
 local headerCorners = Instance.new("UICorner")
-headerCorners.CornerRadius = UDim.new(0, 16)
+headerCorners.CornerRadius = UDim.new(0, 20)
 headerCorners.Parent = header
 
--- ===== СТИЛИЗОВАННАЯ БУКВА "L" (ЛОГОТИП) =====
-local logoContainer = Instance.new("Frame")
-logoContainer.Size = UDim2.new(0, 40, 0, 40)
-logoContainer.Position = UDim2.new(0.02, 0, 0.5, -20)
-logoContainer.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-logoContainer.BackgroundTransparency = 0
-logoContainer.BorderSizePixel = 0
-logoContainer.Parent = header
-
-local logoCorners = Instance.new("UICorner")
-logoCorners.CornerRadius = UDim.new(1, 0)
-logoCorners.Parent = logoContainer
-
-local logoStroke = Instance.new("UIStroke")
-logoStroke.Thickness = 2
-logoStroke.Color = Color3.fromRGB(255, 255, 255)
-logoStroke.Transparency = 0.3
-logoStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-logoStroke.Parent = logoContainer
-
+-- ===== БЕЛАЯ НАКЛОННАЯ БУКВА "L" =====
 local logoLetter = Instance.new("TextLabel")
-logoLetter.Size = UDim2.new(1, 0, 1, 0)
+logoLetter.Size = UDim2.new(0, 40, 0, 40)
+logoLetter.Position = UDim2.new(0.02, 0, 0.5, -20)
 logoLetter.BackgroundTransparency = 1
 logoLetter.Text = "L"
-logoLetter.TextColor3 = Color3.fromRGB(255, 255, 255)
-logoLetter.TextSize = 26
+logoLetter.TextColor3 = Color3.fromRGB(255, 255, 255)  -- БЕЛАЯ
+logoLetter.TextSize = 38
 logoLetter.Font = Enum.Font.GothamBold
+logoLetter.Rotation = -12
 logoLetter.TextXAlignment = Enum.TextXAlignment.Center
 logoLetter.TextYAlignment = Enum.TextYAlignment.Center
-logoLetter.Parent = logoContainer
+logoLetter.Parent = header
 
--- ===== НАЗВАНИЕ (СТИЛЬНЫЙ НАКЛОН) =====
+-- ===== НАЗВАНИЕ =====
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(0.5, 0, 1, 0)
-title.Position = UDim2.new(0.1, 0, 0, 0)
+title.Position = UDim2.new(0.08, 0, 0, 0)
 title.BackgroundTransparency = 1
 title.Text = "Letunium"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -107,16 +90,7 @@ title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = header
 
 -- ============================================================
---  КНОПКА ЗАКРЫТИЯ (ТЕПЕРЬ ТОЛЬКО ЧЕРЕЗ КНОПКУ M)
--- ============================================================
-local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 1, 0, 1)
-closeBtn.BackgroundTransparency = 1
-closeBtn.Text = ""
-closeBtn.Parent = header
-
--- ============================================================
---  КНОПКА M (ДЛЯ ЗАКРЫТИЯ И ОТКРЫТИЯ)
+--  КНОПКА M (ДЛЯ ЗАКРЫТИЯ)
 -- ============================================================
 local mButton = Instance.new("TextButton")
 mButton.Size = UDim2.new(0, 55, 0, 55)
@@ -141,7 +115,6 @@ mStroke.Transparency = 0.3
 mStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 mStroke.Parent = mButton
 
--- ЗАКРЫТИЕ ЧЕРЕЗ M (или F1)
 mButton.MouseButton1Click:Connect(function()
     frame.Visible = not frame.Visible
     mButton.Visible = false
@@ -158,6 +131,10 @@ contentPanel.BackgroundTransparency = 0.05
 contentPanel.BorderSizePixel = 0
 contentPanel.Parent = frame
 
+local contentCorners = Instance.new("UICorner")
+contentCorners.CornerRadius = UDim.new(0, 20)
+contentCorners.Parent = contentPanel
+
 -- ============================================================
 --  НИЖНЯЯ ПАНЕЛЬ С ВКЛАДКАМИ
 -- ============================================================
@@ -170,7 +147,7 @@ bottomBar.BorderSizePixel = 0
 bottomBar.Parent = frame
 
 local bottomCorners = Instance.new("UICorner")
-bottomCorners.CornerRadius = UDim.new(0, 16)
+bottomCorners.CornerRadius = UDim.new(0, 20)
 bottomCorners.Parent = bottomBar
 
 -- ============================================================
@@ -214,9 +191,9 @@ for i, tabName in ipairs(tabNames) do
     content.Parent = contentPanel
     contentFrames[i] = content
 
-    local contentCorners = Instance.new("UICorner")
-    contentCorners.CornerRadius = UDim.new(0, 10)
-    contentCorners.Parent = content
+    local contentCorners2 = Instance.new("UICorner")
+    contentCorners2.CornerRadius = UDim.new(0, 10)
+    contentCorners2.Parent = content
 
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, 0, 1, 0)
@@ -291,7 +268,7 @@ game:GetService("UserInputService").InputChanged:Connect(function(input)
 end)
 
 -- ============================================================
---  ХОТКЕЙ F1
+--  F1
 -- ============================================================
 game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
@@ -307,7 +284,6 @@ game:GetService("UserInputService").InputBegan:Connect(function(input, gameProce
     end
 end)
 
--- ПРИ ЗАКРЫТИИ ЧЕРЕЗ M
 frame:GetPropertyChangedSignal("Visible"):Connect(function()
     if not frame.Visible then
         mButton.Visible = true
