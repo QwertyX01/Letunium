@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (УГЛЫ ТОЛЬКО У ВКЛАДОК)
+--  LETUNIUM HUB (ГАЛАКТИКА ИЗ ЗВЁЗД ВОКРУГ МЕНЮ)
 --  by Tormentor412
 -- ============================================================
 
@@ -43,6 +43,59 @@ frame.Active = true
 frame.Draggable = true
 frame.ClipsDescendants = true
 frame.Parent = gui
+
+-- ============================================================
+--  ЗВЁЗДЫ (ГАЛАКТИКА) ВОКРУГ МЕНЮ
+-- ============================================================
+local stars = {}
+local starCount = 80
+local screenSize = game:GetService("GuiService").ScreenSize
+
+for i = 1, starCount do
+    local star = Instance.new("Frame")
+    star.Size = UDim2.new(0, math.random(2, 4), 0, math.random(2, 4))
+    star.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    star.BackgroundTransparency = math.random(30, 80) / 100
+    star.BorderSizePixel = 0
+    star.Parent = gui
+    
+    local starCorners = Instance.new("UICorner")
+    starCorners.CornerRadius = UDim.new(1, 0)
+    starCorners.Parent = star
+    
+    -- СЛУЧАЙНАЯ ПОЗИЦИЯ ВОКРУГ МЕНЮ
+    local x = math.random(-100, screenSize.X + 100)
+    local y = math.random(-100, screenSize.Y + 100)
+    star.Position = UDim2.new(0, x, 0, y)
+    
+    -- СЛУЧАЙНАЯ СКОРОСТЬ И НАПРАВЛЕНИЕ
+    local speedX = (math.random() - 0.5) * 1.5
+    local speedY = (math.random() - 0.5) * 1.5
+    
+    stars[i] = {
+        star = star,
+        speedX = speedX,
+        speedY = speedY,
+        x = x,
+        y = y
+    }
+end
+
+-- АНИМАЦИЯ ЗВЁЗД
+game:GetService("RunService").RenderStepped:Connect(function()
+    for _, data in pairs(stars) do
+        data.x = data.x + data.speedX
+        data.y = data.y + data.speedY
+        
+        -- ТЕЛЕПОРТАЦИЯ ЗА ГРАНИЦЫ ЭКРАНА
+        if data.x < -100 then data.x = screenSize.X + 100 end
+        if data.x > screenSize.X + 100 then data.x = -100 end
+        if data.y < -100 then data.y = screenSize.Y + 100 end
+        if data.y > screenSize.Y + 100 then data.y = -100 end
+        
+        data.star.Position = UDim2.new(0, data.x, 0, data.y)
+    end
+end)
 
 -- ============================================================
 --  ЗАГОЛОВОК (ПРЯМЫЕ УГЛЫ)
@@ -156,7 +209,6 @@ for i, tabName in ipairs(tabNames) do
     btn.Parent = bottomBar
     tabButtons[i] = btn
 
-    -- СКРУГЛЕНИЕ УГЛОВ У КАЖДОЙ ВКЛАДКИ
     local btnCorners = Instance.new("UICorner")
     btnCorners.CornerRadius = UDim.new(0, 10)
     btnCorners.Parent = btn
@@ -180,7 +232,6 @@ for i, tabName in ipairs(tabNames) do
     content.Parent = contentPanel
     contentFrames[i] = content
 
-    -- СКРУГЛЕНИЕ УГЛОВ У КОНТЕНТА ВКЛАДКИ
     local contentCorners = Instance.new("UICorner")
     contentCorners.CornerRadius = UDim.new(0, 10)
     contentCorners.Parent = content
@@ -283,3 +334,4 @@ end)
 print("✅ Letunium Hub загружен успешно!")
 print("🔑 F1 - открыть/закрыть")
 print("📁 Вкладки: VISUALS | AIMBOT | FUNCTIONS")
+print("✨ Звёзды летают вокруг меню!")
