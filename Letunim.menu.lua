@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (3 ВКЛАДКИ С МЯГКИМИ УГЛАМИ)
+--  LETUNIUM HUB (ЗВЁЗДЫ ТОЛЬКО ПРИ ОТКРЫТОМ МЕНЮ)
 --  by Tormentor412
 -- ============================================================
 
@@ -84,23 +84,15 @@ infoStatus.Font = Enum.Font.GothamMedium
 infoStatus.TextXAlignment = Enum.TextXAlignment.Left
 infoStatus.Parent = infoPanel
 
-infoPanel.MouseButton1Click:Connect(function()
-    if frame then
-        frame.Visible = not frame.Visible
-        if mButton then
-            mButton.Visible = not frame.Visible
-        end
-    end
-end)
-
 -- ============================================================
---  ЗВЁЗДЫ
+--  ЗВЁЗДЫ (СОЗДАЮТСЯ, НО СКРЫТЫ ПО УМОЛЧАНИЮ)
 -- ============================================================
 local starContainer = Instance.new("Frame")
 starContainer.Size = UDim2.new(1, 0, 1, 0)
 starContainer.BackgroundTransparency = 1
 starContainer.BorderSizePixel = 0
 starContainer.ZIndex = 0
+starContainer.Visible = true  -- Видимы, когда меню открыто
 starContainer.Parent = gui
 
 local tweenService = game:GetService("TweenService")
@@ -176,7 +168,11 @@ for i = 1, 60 do
     createStar()
 end
 
+-- Анимация движения звёзд
 game:GetService("RunService").RenderStepped:Connect(function()
+    -- Обновляем звёзды, только если они видимы
+    if not starContainer.Visible then return end
+    
     local menuCenterX = 0.5 * gui.AbsoluteSize.X
     local menuCenterY = 0.5 * gui.AbsoluteSize.Y
     local menuWidth = 760
@@ -205,6 +201,50 @@ game:GetService("RunService").RenderStepped:Connect(function()
             if data.y > gui.AbsoluteSize.Y + 100 then data.y = -100 end
             
             data.star.Position = UDim2.new(0, data.x, 0, data.y)
+        end
+    end
+end)
+
+-- ============================================================
+--  УПРАВЛЕНИЕ ВИДИМОСТЬЮ ЗВЁЗД ПРИ ОТКРЫТИИ/ЗАКРЫТИИ МЕНЮ
+-- ============================================================
+local function updateStarsVisibility()
+    starContainer.Visible = frame.Visible
+end
+
+-- Подписываемся на изменение видимости меню
+frame:GetPropertyChangedSignal("Visible"):Connect(updateStarsVisibility)
+
+-- При клике на инфо-панель
+infoPanel.MouseButton1Click:Connect(function()
+    if frame then
+        frame.Visible = not frame.Visible
+        if mButton then
+            mButton.Visible = not frame.Visible
+        end
+        updateStarsVisibility()
+    end
+end)
+
+-- При клике на кнопку M
+mButton.MouseButton1Click:Connect(function()
+    frame.Visible = not frame.Visible
+    mButton.Visible = false
+    updateStarsVisibility()
+end)
+
+-- При F1
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.F1 then
+        if frame then
+            frame.Visible = not frame.Visible
+            if frame.Visible then
+                mButton.Visible = false
+            else
+                mButton.Visible = true
+            end
+            updateStarsVisibility()
         end
     end
 end)
@@ -270,11 +310,6 @@ mStroke.Transparency = 0.3
 mStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 mStroke.Parent = mButton
 
-mButton.MouseButton1Click:Connect(function()
-    frame.Visible = not frame.Visible
-    mButton.Visible = false
-end)
-
 -- ============================================================
 --  КОНТЕНТ
 -- ============================================================
@@ -287,7 +322,7 @@ contentPanel.BorderSizePixel = 0
 contentPanel.Parent = frame
 
 -- ============================================================
---  НИЖНЯЯ ПАНЕЛЬ С ВКЛАДКАМИ
+--  НИЖНЯЯ ПАНЕЛЬ
 -- ============================================================
 local bottomBar = Instance.new("Frame")
 bottomBar.Size = UDim2.new(1, 0, 0, 50)
@@ -298,7 +333,7 @@ bottomBar.BorderSizePixel = 0
 bottomBar.Parent = frame
 
 -- ============================================================
---  ВКЛАДКИ (3 ШТУКИ С МЯГКИМИ УГЛАМИ)
+--  ВКЛАДКИ
 -- ============================================================
 local tabNames = {"VISUALS", "AIMBOT", "SETTINGS"}
 local tabButtons = {}
@@ -319,7 +354,6 @@ for i, tabName in ipairs(tabNames) do
     btn.Parent = bottomBar
     tabButtons[i] = btn
 
-    -- МЯГКИЕ УГЛЫ У КАЖДОЙ ВКЛАДКИ
     local btnCorners = Instance.new("UICorner")
     btnCorners.CornerRadius = UDim.new(0, 10)
     btnCorners.Parent = btn
@@ -343,7 +377,6 @@ for i, tabName in ipairs(tabNames) do
     content.Parent = contentPanel
     contentFrames[i] = content
 
-    -- МЯГКИЕ УГЛЫ У КОНТЕНТА
     local contentCorners = Instance.new("UICorner")
     contentCorners.CornerRadius = UDim.new(0, 10)
     contentCorners.Parent = content
@@ -375,7 +408,7 @@ end
 tabButtons[1].TextColor3 = Color3.fromRGB(255, 255, 255)
 
 -- ============================================================
---  VISUALS ВКЛАДКА (ESP)
+--  VISUALS (ESP)
 -- ============================================================
 local espBtn = Instance.new("TextButton")
 espBtn.Size = UDim2.new(0, 200, 0, 40)
@@ -477,7 +510,7 @@ game.Players.PlayerRemoving:Connect(function(p)
 end)
 
 -- ============================================================
---  AIMBOT ВКЛАДКА
+--  AIMBOT
 -- ============================================================
 local aimbotBtn = Instance.new("TextButton")
 aimbotBtn.Size = UDim2.new(0, 200, 0, 40)
@@ -505,7 +538,7 @@ aimbotBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================
---  SETTINGS ВКЛАДКА (ПРОЗРАЧНОСТЬ)
+--  SETTINGS (ПРОЗРАЧНОСТЬ)
 -- ============================================================
 local transLabel = Instance.new("TextLabel")
 transLabel.Size = UDim2.new(0.3, 0, 0.06, 0)
@@ -616,32 +649,7 @@ game:GetService("UserInputService").InputChanged:Connect(function(input)
     end
 end)
 
--- ============================================================
---  F1
--- ============================================================
-game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.F1 then
-        if frame then
-            frame.Visible = not frame.Visible
-            if frame.Visible then
-                mButton.Visible = false
-            else
-                mButton.Visible = true
-            end
-        end
-    end
-end)
-
-frame:GetPropertyChangedSignal("Visible"):Connect(function()
-    if not frame.Visible then
-        mButton.Visible = true
-    else
-        mButton.Visible = false
-    end
-end)
-
 print("✅ Letunium Hub загружен успешно!")
 print("🔑 F1 - открыть/закрыть")
 print("📁 Вкладки: VISUALS | AIMBOT | SETTINGS")
-print("✨ Звёзды летают вокруг меню!")
+print("✨ Звёзды появляются только при открытом меню!")
