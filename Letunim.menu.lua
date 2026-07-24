@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (ИНФО-ПАНЕЛЬ - TEXTBUTTON)
+--  LETUNIUM HUB (3 ВКЛАДКИ С МЯГКИМИ УГЛАМИ)
 --  by Tormentor412
 -- ============================================================
 
@@ -62,7 +62,6 @@ local infoCorners = Instance.new("UICorner")
 infoCorners.CornerRadius = UDim.new(0, 8)
 infoCorners.Parent = infoPanel
 
--- НАЗВАНИЕ (Letunium)
 local infoTitle = Instance.new("TextLabel")
 infoTitle.Size = UDim2.new(0.6, 0, 1, 0)
 infoTitle.Position = UDim2.new(0.05, 0, 0, 0)
@@ -74,7 +73,6 @@ infoTitle.Font = Enum.Font.GothamBold
 infoTitle.TextXAlignment = Enum.TextXAlignment.Left
 infoTitle.Parent = infoPanel
 
--- СТАТУС (Opening)
 local infoStatus = Instance.new("TextLabel")
 infoStatus.Size = UDim2.new(0.35, 0, 1, 0)
 infoStatus.Position = UDim2.new(0.62, 0, 0, 0)
@@ -86,7 +84,6 @@ infoStatus.Font = Enum.Font.GothamMedium
 infoStatus.TextXAlignment = Enum.TextXAlignment.Left
 infoStatus.Parent = infoPanel
 
--- КЛИК ПО ПАНЕЛИ - ОТКРЫТИЕ/ЗАКРЫТИЕ МЕНЮ
 infoPanel.MouseButton1Click:Connect(function()
     if frame then
         frame.Visible = not frame.Visible
@@ -290,7 +287,7 @@ contentPanel.BorderSizePixel = 0
 contentPanel.Parent = frame
 
 -- ============================================================
---  НИЖНЯЯ ПАНЕЛЬ
+--  НИЖНЯЯ ПАНЕЛЬ С ВКЛАДКАМИ
 -- ============================================================
 local bottomBar = Instance.new("Frame")
 bottomBar.Size = UDim2.new(1, 0, 0, 50)
@@ -301,7 +298,7 @@ bottomBar.BorderSizePixel = 0
 bottomBar.Parent = frame
 
 -- ============================================================
---  ВКЛАДКИ
+--  ВКЛАДКИ (3 ШТУКИ С МЯГКИМИ УГЛАМИ)
 -- ============================================================
 local tabNames = {"VISUALS", "AIMBOT", "SETTINGS"}
 local tabButtons = {}
@@ -322,6 +319,7 @@ for i, tabName in ipairs(tabNames) do
     btn.Parent = bottomBar
     tabButtons[i] = btn
 
+    -- МЯГКИЕ УГЛЫ У КАЖДОЙ ВКЛАДКИ
     local btnCorners = Instance.new("UICorner")
     btnCorners.CornerRadius = UDim.new(0, 10)
     btnCorners.Parent = btn
@@ -345,6 +343,7 @@ for i, tabName in ipairs(tabNames) do
     content.Parent = contentPanel
     contentFrames[i] = content
 
+    -- МЯГКИЕ УГЛЫ У КОНТЕНТА
     local contentCorners = Instance.new("UICorner")
     contentCorners.CornerRadius = UDim.new(0, 10)
     contentCorners.Parent = content
