@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (УГЛЫ ТОЛЬКО У ВКЛАДОК + ЗВЁЗДЫ - ИСПРАВЛЕНО)
+--  LETUNIUM HUB (ЗВЁЗДЫ ВОКРУГ МЕНЮ)
 --  by Tormentor412
 -- ============================================================
 
@@ -31,7 +31,7 @@ game:GetService("Debris"):AddItem(hello, 1.5)
 wait(1.5)
 
 -- ============================================================
---  ОСНОВНОЕ МЕНЮ (ПРЯМЫЕ УГЛЫ)
+--  ОСНОВНОЕ МЕНЮ
 -- ============================================================
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 760, 0, 400)
@@ -45,7 +45,7 @@ frame.ClipsDescendants = true
 frame.Parent = gui
 
 -- ============================================================
---  ЗВЁЗДЫ (ДЕКОРАТИВНЫЕ, ЛЕТАЮТ ВОКРУГ МЕНЮ)
+--  ЗВЁЗДЫ ВОКРУГ МЕНЮ
 -- ============================================================
 local starContainer = Instance.new("Frame")
 starContainer.Size = UDim2.new(1, 0, 1, 0)
@@ -55,14 +55,14 @@ starContainer.ZIndex = 0
 starContainer.Parent = gui
 
 local tweenService = game:GetService("TweenService")
-local orbitConnections = {} -- Храним подключения отдельно
+local starData = {}
 
 local function createStar()
     local star = Instance.new("Frame")
-    local size = math.random(6, 14)
+    local size = math.random(3, 8)
     star.Size = UDim2.new(0, size, 0, size)
     star.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    star.BackgroundTransparency = 0.2 + math.random(0, 60) / 100
+    star.BackgroundTransparency = 0.2 + math.random(0, 50) / 100
     star.BorderSizePixel = 0
     star.ZIndex = 0
     star.Parent = starContainer
@@ -71,68 +71,109 @@ local function createStar()
     starCorners.CornerRadius = UDim.new(1, 0)
     starCorners.Parent = star
     
-    -- Случайная начальная позиция вокруг меню
-    local angle = math.rad(math.random(0, 360))
-    local distance = math.random(50, 350)
-    local centerX = 0.5 * gui.AbsoluteSize.X
-    local centerY = 0.5 * gui.AbsoluteSize.Y
-    star.Position = UDim2.new(0, centerX + math.cos(angle) * distance - size/2, 0, centerY + math.sin(angle) * distance - size/2)
+    -- Получаем позицию меню
+    local menuCenterX = 0.5 * gui.AbsoluteSize.X
+    local menuCenterY = 0.5 * gui.AbsoluteSize.Y
+    local menuWidth = 760
+    local menuHeight = 400
     
-    -- Параметры движения
-    local speed = 0.2 + math.random() * 0.5
-    local orbitRadius = math.random(30, 200)
-    local startAngle = math.rad(math.random(0, 360))
-    local startSize = size
+    -- Размещаем звёзды по периметру меню
+    local side = math.random(1, 4)
+    local x, y
+    
+    if side == 1 then -- Сверху
+        x = menuCenterX + (math.random() - 0.5) * (menuWidth + 150)
+        y = menuCenterY - menuHeight/2 - math.random(20, 120)
+    elseif side == 2 then -- Справа
+        x = menuCenterX + menuWidth/2 + math.random(20, 120)
+        y = menuCenterY + (math.random() - 0.5) * (menuHeight + 100)
+    elseif side == 3 then -- Снизу
+        x = menuCenterX + (math.random() - 0.5) * (menuWidth + 150)
+        y = menuCenterY + menuHeight/2 + math.random(20, 120)
+    else -- Слева
+        x = menuCenterX - menuWidth/2 - math.random(20, 120)
+        y = menuCenterY + (math.random() - 0.5) * (menuHeight + 100)
+    end
+    
+    star.Position = UDim2.new(0, x, 0, y)
+    
+    -- Скорость движения
+    local speedX = (math.random() - 0.5) * 1.0
+    local speedY = (math.random() - 0.5) * 1.0
+    
+    -- Сохраняем данные
+    local data = {
+        star = star,
+        x = x,
+        y = y,
+        speedX = speedX,
+        speedY = speedY,
+        size = size
+    }
+    table.insert(starData, data)
     
     -- Анимация вращения
-    local rotationTween = tweenService:Create(star, TweenInfo.new(2 + math.random() * 3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+    tweenService:Create(star, TweenInfo.new(2 + math.random() * 3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
         Rotation = 360
-    })
-    rotationTween:Play()
+    }):Play()
     
-    -- Анимация прозрачности (мерцание)
-    local fadeTween = tweenService:Create(star, TweenInfo.new(1 + math.random() * 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+    -- Мерцание
+    tweenService:Create(star, TweenInfo.new(1 + math.random() * 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
         BackgroundTransparency = 0.1 + math.random(0, 60) / 100
-    })
-    fadeTween:Play()
+    }):Play()
     
-    -- Анимация размера (пульсация)
-    local sizeTween = tweenService:Create(star, TweenInfo.new(1.5 + math.random() * 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-        Size = UDim2.new(0, startSize + math.random(2, 6), 0, startSize + math.random(2, 6))
-    })
-    sizeTween:Play()
-    
-    -- Движение по орбите
-    local orbitConnection
-    orbitConnection = game:GetService("RunService").RenderStepped:Connect(function()
-        if not star.Parent then
-            orbitConnection:Disconnect()
-            return
-        end
-        
-        startAngle = startAngle + 0.01 * speed
-        local currentCenterX = 0.5 * gui.AbsoluteSize.X
-        local currentCenterY = 0.5 * gui.AbsoluteSize.Y
-        
-        local x = currentCenterX + math.cos(startAngle) * orbitRadius - star.Size.X.Offset/2
-        local y = currentCenterY + math.sin(startAngle) * orbitRadius - star.Size.Y.Offset/2
-        
-        star.Position = UDim2.new(0, x, 0, y)
-    end)
-    
-    -- Сохраняем подключение в таблицу
-    table.insert(orbitConnections, orbitConnection)
+    -- Пульсация размера
+    tweenService:Create(star, TweenInfo.new(1.5 + math.random() * 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+        Size = UDim2.new(0, size + math.random(2, 4), 0, size + math.random(2, 4))
+    }):Play()
     
     return star
 end
 
--- Создаём 50 звёзд
-for i = 1, 50 do
+-- Создаём 60 звёзд
+for i = 1, 60 do
     createStar()
 end
 
+-- Движение звёзд
+game:GetService("RunService").RenderStepped:Connect(function()
+    local menuCenterX = 0.5 * gui.AbsoluteSize.X
+    local menuCenterY = 0.5 * gui.AbsoluteSize.Y
+    local menuWidth = 760
+    local menuHeight = 400
+    
+    for _, data in pairs(starData) do
+        if data.star and data.star.Parent then
+            data.x = data.x + data.speedX
+            data.y = data.y + data.speedY
+            
+            -- Отталкивание от центра меню
+            local dx = data.x - menuCenterX
+            local dy = data.y - menuCenterY
+            local dist = math.sqrt(dx*dx + dy*dy)
+            
+            -- Минимальное расстояние от центра (чтобы не залетали внутрь)
+            local minDist = math.max(menuWidth/2 + 30, menuHeight/2 + 30)
+            if dist < minDist then
+                local pushX = (dx / (dist + 0.001)) * 0.8
+                local pushY = (dy / (dist + 0.001)) * 0.8
+                data.x = data.x + pushX
+                data.y = data.y + pushY
+            end
+            
+            -- Телепортация за границы
+            if data.x < -100 then data.x = gui.AbsoluteSize.X + 100 end
+            if data.x > gui.AbsoluteSize.X + 100 then data.x = -100 end
+            if data.y < -100 then data.y = gui.AbsoluteSize.Y + 100 end
+            if data.y > gui.AbsoluteSize.Y + 100 then data.y = -100 end
+            
+            data.star.Position = UDim2.new(0, data.x, 0, data.y)
+        end
+    end
+end)
+
 -- ============================================================
---  ЗАГОЛОВОК (ПРЯМЫЕ УГЛЫ)
+--  ЗАГОЛОВОК
 -- ============================================================
 local header = Instance.new("Frame")
 header.Size = UDim2.new(1, 0, 0, 55)
@@ -169,7 +210,7 @@ title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = header
 
 -- ============================================================
---  КНОПКА M (ДЛЯ ЗАКРЫТИЯ)
+--  КНОПКА M
 -- ============================================================
 local mButton = Instance.new("TextButton")
 mButton.Size = UDim2.new(0, 55, 0, 55)
@@ -200,7 +241,7 @@ mButton.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================
---  КОНТЕЙНЕР ДЛЯ КОНТЕНТА (ПРЯМЫЕ УГЛЫ)
+--  КОНТЕНТ
 -- ============================================================
 local contentPanel = Instance.new("Frame")
 contentPanel.Size = UDim2.new(1, 0, 1, -105)
@@ -211,7 +252,7 @@ contentPanel.BorderSizePixel = 0
 contentPanel.Parent = frame
 
 -- ============================================================
---  НИЖНЯЯ ПАНЕЛЬ С ВКЛАДКАМИ (ПРЯМЫЕ УГЛЫ)
+--  НИЖНЯЯ ПАНЕЛЬ С ВКЛАДКАМИ
 -- ============================================================
 local bottomBar = Instance.new("Frame")
 bottomBar.Size = UDim2.new(1, 0, 0, 50)
@@ -222,7 +263,7 @@ bottomBar.BorderSizePixel = 0
 bottomBar.Parent = frame
 
 -- ============================================================
---  ВКЛАДКИ (СМЯГЧЁННЫЕ УГЛЫ)
+--  ВКЛАДКИ
 -- ============================================================
 local tabNames = {"VISUALS", "AIMBOT", "FUNCTIONS"}
 local tabButtons = {}
@@ -243,7 +284,6 @@ for i, tabName in ipairs(tabNames) do
     btn.Parent = bottomBar
     tabButtons[i] = btn
 
-    -- СКРУГЛЕНИЕ УГЛОВ У КАЖДОЙ ВКЛАДКИ
     local btnCorners = Instance.new("UICorner")
     btnCorners.CornerRadius = UDim.new(0, 10)
     btnCorners.Parent = btn
@@ -267,7 +307,6 @@ for i, tabName in ipairs(tabNames) do
     content.Parent = contentPanel
     contentFrames[i] = content
 
-    -- СКРУГЛЕНИЕ УГЛОВ У КОНТЕНТА ВКЛАДКИ
     local contentCorners = Instance.new("UICorner")
     contentCorners.CornerRadius = UDim.new(0, 10)
     contentCorners.Parent = content
