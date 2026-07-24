@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (ЗВЁЗДЫ ТОЛЬКО ПРИ ОТКРЫТОМ МЕНЮ)
+--  LETUNIUM HUB (МАТОВОЕ МЕНЮ + ЗВЁЗДЫ ПРИ ОТКРЫТИИ)
 --  by Tormentor412
 -- ============================================================
 
@@ -31,13 +31,13 @@ game:GetService("Debris"):AddItem(hello, 1.5)
 wait(1.5)
 
 -- ============================================================
---  ОСНОВНОЕ МЕНЮ
+--  ОСНОВНОЕ МЕНЮ (МАТОВОЕ)
 -- ============================================================
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 760, 0, 400)
 frame.Position = UDim2.new(0.5, -380, 0.5, -200)
 frame.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
-frame.BackgroundTransparency = 0
+frame.BackgroundTransparency = 0  -- МАТОВОЕ
 frame.BorderSizePixel = 0
 frame.Active = true
 frame.Draggable = true
@@ -85,14 +85,14 @@ infoStatus.TextXAlignment = Enum.TextXAlignment.Left
 infoStatus.Parent = infoPanel
 
 -- ============================================================
---  ЗВЁЗДЫ (СОЗДАЮТСЯ, НО СКРЫТЫ ПО УМОЛЧАНИЮ)
+--  ЗВЁЗДЫ (СКРЫТЫ ПО УМОЛЧАНИЮ)
 -- ============================================================
 local starContainer = Instance.new("Frame")
 starContainer.Size = UDim2.new(1, 0, 1, 0)
 starContainer.BackgroundTransparency = 1
 starContainer.BorderSizePixel = 0
 starContainer.ZIndex = 0
-starContainer.Visible = true  -- Видимы, когда меню открыто
+starContainer.Visible = false  -- СКРЫТЫ ПО УМОЛЧАНИЮ
 starContainer.Parent = gui
 
 local tweenService = game:GetService("TweenService")
@@ -168,9 +168,8 @@ for i = 1, 60 do
     createStar()
 end
 
--- Анимация движения звёзд
+-- Анимация движения звёзд (только когда видимы)
 game:GetService("RunService").RenderStepped:Connect(function()
-    -- Обновляем звёзды, только если они видимы
     if not starContainer.Visible then return end
     
     local menuCenterX = 0.5 * gui.AbsoluteSize.X
@@ -206,56 +205,21 @@ game:GetService("RunService").RenderStepped:Connect(function()
 end)
 
 -- ============================================================
---  УПРАВЛЕНИЕ ВИДИМОСТЬЮ ЗВЁЗД ПРИ ОТКРЫТИИ/ЗАКРЫТИИ МЕНЮ
+--  УПРАВЛЕНИЕ ВИДИМОСТЬЮ ЗВЁЗД
 -- ============================================================
 local function updateStarsVisibility()
     starContainer.Visible = frame.Visible
 end
 
--- Подписываемся на изменение видимости меню
 frame:GetPropertyChangedSignal("Visible"):Connect(updateStarsVisibility)
 
--- При клике на инфо-панель
-infoPanel.MouseButton1Click:Connect(function()
-    if frame then
-        frame.Visible = not frame.Visible
-        if mButton then
-            mButton.Visible = not frame.Visible
-        end
-        updateStarsVisibility()
-    end
-end)
-
--- При клике на кнопку M
-mButton.MouseButton1Click:Connect(function()
-    frame.Visible = not frame.Visible
-    mButton.Visible = false
-    updateStarsVisibility()
-end)
-
--- При F1
-game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.F1 then
-        if frame then
-            frame.Visible = not frame.Visible
-            if frame.Visible then
-                mButton.Visible = false
-            else
-                mButton.Visible = true
-            end
-            updateStarsVisibility()
-        end
-    end
-end)
-
 -- ============================================================
---  ЗАГОЛОВОК
+--  ЗАГОЛОВОК (МАТОВЫЙ)
 -- ============================================================
 local header = Instance.new("Frame")
 header.Size = UDim2.new(1, 0, 0, 55)
 header.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-header.BackgroundTransparency = 0
+header.BackgroundTransparency = 0  -- МАТОВЫЙ
 header.BorderSizePixel = 0
 header.Parent = frame
 
@@ -311,24 +275,24 @@ mStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 mStroke.Parent = mButton
 
 -- ============================================================
---  КОНТЕНТ
+--  КОНТЕНТ (МАТОВЫЙ)
 -- ============================================================
 local contentPanel = Instance.new("Frame")
 contentPanel.Size = UDim2.new(1, 0, 1, -105)
 contentPanel.Position = UDim2.new(0, 0, 0, 55)
 contentPanel.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-contentPanel.BackgroundTransparency = 0
+contentPanel.BackgroundTransparency = 0  -- МАТОВЫЙ
 contentPanel.BorderSizePixel = 0
 contentPanel.Parent = frame
 
 -- ============================================================
---  НИЖНЯЯ ПАНЕЛЬ
+--  НИЖНЯЯ ПАНЕЛЬ (МАТОВАЯ)
 -- ============================================================
 local bottomBar = Instance.new("Frame")
 bottomBar.Size = UDim2.new(1, 0, 0, 50)
 bottomBar.Position = UDim2.new(0, 0, 1, -50)
 bottomBar.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-bottomBar.BackgroundTransparency = 0
+bottomBar.BackgroundTransparency = 0  -- МАТОВЫЙ
 bottomBar.BorderSizePixel = 0
 bottomBar.Parent = frame
 
@@ -595,10 +559,58 @@ game:GetService("RunService").RenderStepped:Connect(function()
             transKnob.Position = UDim2.new(val, -8, 0.5, -8)
             local percent = math.round(val * 100)
             transLabel.Text = "Прозрачность: " .. percent .. "%"
-            frame.BackgroundTransparency = val * 0.8
-            header.BackgroundTransparency = val * 0.8
-            contentPanel.BackgroundTransparency = val * 0.8
-            bottomBar.BackgroundTransparency = val * 0.8
+            -- Меняем прозрачность только если она не 0 (чтобы меню оставалось матовым при 0%)
+            if val > 0 then
+                frame.BackgroundTransparency = val * 0.8
+                header.BackgroundTransparency = val * 0.8
+                contentPanel.BackgroundTransparency = val * 0.8
+                bottomBar.BackgroundTransparency = val * 0.8
+            else
+                frame.BackgroundTransparency = 0
+                header.BackgroundTransparency = 0
+                contentPanel.BackgroundTransparency = 0
+                bottomBar.BackgroundTransparency = 0
+            end
+        end
+    end
+end)
+
+-- ============================================================
+--  КЛИК ПО ПАНЕЛИ
+-- ============================================================
+infoPanel.MouseButton1Click:Connect(function()
+    if frame then
+        frame.Visible = not frame.Visible
+        if mButton then
+            mButton.Visible = not frame.Visible
+        end
+        updateStarsVisibility()
+    end
+end)
+
+-- ============================================================
+--  КНОПКА M
+-- ============================================================
+mButton.MouseButton1Click:Connect(function()
+    frame.Visible = not frame.Visible
+    mButton.Visible = false
+    updateStarsVisibility()
+end)
+
+-- ============================================================
+--  F1
+-- ============================================================
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.F1 then
+        if frame then
+            frame.Visible = not frame.Visible
+            if frame.Visible then
+                mButton.Visible = false
+            else
+                mButton.Visible = true
+            end
+            updateStarsVisibility()
         end
     end
 end)
