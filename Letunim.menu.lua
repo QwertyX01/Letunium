@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (УГЛЫ ТОЛЬКО У ВКЛАДОК + ЗВЁЗДЫ)
+--  LETUNIUM HUB (УГЛЫ ТОЛЬКО У ВКЛАДОК + ЗВЁЗДЫ - ИСПРАВЛЕНО)
 --  by Tormentor412
 -- ============================================================
 
@@ -55,30 +55,34 @@ starContainer.ZIndex = 0
 starContainer.Parent = gui
 
 local tweenService = game:GetService("TweenService")
+local orbitConnections = {} -- Храним подключения отдельно
 
 local function createStar()
-    local star = Instance.new("ImageLabel")
-    star.Size = UDim2.new(0, math.random(8, 16), 0, math.random(8, 16))
-    star.BackgroundTransparency = 1
-    star.Image = "rbxassetid://0" -- Пустая текстура
+    local star = Instance.new("Frame")
+    local size = math.random(6, 14)
+    star.Size = UDim2.new(0, size, 0, size)
     star.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    star.BackgroundTransparency = 0.2 + math.random(0, 50) / 100
+    star.BackgroundTransparency = 0.2 + math.random(0, 60) / 100
     star.BorderSizePixel = 0
     star.ZIndex = 0
     star.Parent = starContainer
+    
+    local starCorners = Instance.new("UICorner")
+    starCorners.CornerRadius = UDim.new(1, 0)
+    starCorners.Parent = star
     
     -- Случайная начальная позиция вокруг меню
     local angle = math.rad(math.random(0, 360))
     local distance = math.random(50, 350)
     local centerX = 0.5 * gui.AbsoluteSize.X
     local centerY = 0.5 * gui.AbsoluteSize.Y
-    star.Position = UDim2.new(0, centerX + math.cos(angle) * distance - star.Size.X.Offset/2, 0, centerY + math.sin(angle) * distance - star.Size.Y.Offset/2)
+    star.Position = UDim2.new(0, centerX + math.cos(angle) * distance - size/2, 0, centerY + math.sin(angle) * distance - size/2)
     
     -- Параметры движения
     local speed = 0.2 + math.random() * 0.5
     local orbitRadius = math.random(30, 200)
     local startAngle = math.rad(math.random(0, 360))
-    local startSize = star.Size.X.Offset
+    local startSize = size
     
     -- Анимация вращения
     local rotationTween = tweenService:Create(star, TweenInfo.new(2 + math.random() * 3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
@@ -116,7 +120,8 @@ local function createStar()
         star.Position = UDim2.new(0, x, 0, y)
     end)
     
-    star:SetAttribute("OrbitConnection", orbitConnection)
+    -- Сохраняем подключение в таблицу
+    table.insert(orbitConnections, orbitConnection)
     
     return star
 end
