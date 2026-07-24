@@ -37,13 +37,48 @@ local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 760, 0, 400)
 frame.Position = UDim2.new(0.5, -380, 0.5, -200)
 frame.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
-frame.BackgroundTransparency = 0  -- МАТОВОЕ
+frame.BackgroundTransparency = 0
 frame.BorderSizePixel = 0
 frame.Active = true
 frame.Draggable = true
 frame.ClipsDescendants = true
 frame.Visible = true
 frame.Parent = gui
+
+-- ============================================================
+--  ЗАГОЛОВОК (МАТОВЫЙ)
+-- ============================================================
+local header = Instance.new("Frame")
+header.Size = UDim2.new(1, 0, 0, 55)
+header.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+header.BackgroundTransparency = 0
+header.BorderSizePixel = 0
+header.Parent = frame
+
+local logoLetter = Instance.new("TextLabel")
+logoLetter.Size = UDim2.new(0, 40, 0, 40)
+logoLetter.Position = UDim2.new(0.02, 0, 0.5, -20)
+logoLetter.BackgroundTransparency = 1
+logoLetter.Text = "L"
+logoLetter.TextColor3 = Color3.fromRGB(255, 255, 255)
+logoLetter.TextSize = 38
+logoLetter.Font = Enum.Font.GothamBold
+logoLetter.Rotation = -12
+logoLetter.TextXAlignment = Enum.TextXAlignment.Center
+logoLetter.TextYAlignment = Enum.TextYAlignment.Center
+logoLetter.Parent = header
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(0.5, 0, 1, 0)
+title.Position = UDim2.new(0.08, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "Letunium"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 22
+title.Font = Enum.Font.GothamMedium
+title.Rotation = -2
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = header
 
 -- ============================================================
 --  ИНФО-ПАНЕЛЬ (TEXTBUTTON)
@@ -85,14 +120,40 @@ infoStatus.TextXAlignment = Enum.TextXAlignment.Left
 infoStatus.Parent = infoPanel
 
 -- ============================================================
---  ЗВЁЗДЫ (СКРЫТЫ ПО УМОЛЧАНИЮ)
+--  КНОПКА M
+-- ============================================================
+local mButton = Instance.new("TextButton")
+mButton.Size = UDim2.new(0, 55, 0, 55)
+mButton.Position = UDim2.new(1, -70, 1, -70)
+mButton.BackgroundColor3 = Color3.fromRGB(200, 30, 30)
+mButton.BackgroundTransparency = 0.1
+mButton.Text = "L"
+mButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+mButton.TextSize = 28
+mButton.Font = Enum.Font.GothamBold
+mButton.Visible = false
+mButton.Parent = gui
+
+local mCorners = Instance.new("UICorner")
+mCorners.CornerRadius = UDim.new(1, 0)
+mCorners.Parent = mButton
+
+local mStroke = Instance.new("UIStroke")
+mStroke.Thickness = 2
+mStroke.Color = Color3.fromRGB(255, 255, 255)
+mStroke.Transparency = 0.3
+mStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+mStroke.Parent = mButton
+
+-- ============================================================
+--  ЗВЁЗДЫ (ТОЛЬКО ПРИ ОТКРЫТОМ МЕНЮ)
 -- ============================================================
 local starContainer = Instance.new("Frame")
 starContainer.Size = UDim2.new(1, 0, 1, 0)
 starContainer.BackgroundTransparency = 1
 starContainer.BorderSizePixel = 0
 starContainer.ZIndex = 0
-starContainer.Visible = false  -- СКРЫТЫ ПО УМОЛЧАНИЮ
+starContainer.Visible = false
 starContainer.Parent = gui
 
 local tweenService = game:GetService("TweenService")
@@ -168,7 +229,6 @@ for i = 1, 60 do
     createStar()
 end
 
--- Анимация движения звёзд (только когда видимы)
 game:GetService("RunService").RenderStepped:Connect(function()
     if not starContainer.Visible then return end
     
@@ -204,75 +264,11 @@ game:GetService("RunService").RenderStepped:Connect(function()
     end
 end)
 
--- ============================================================
---  УПРАВЛЕНИЕ ВИДИМОСТЬЮ ЗВЁЗД
--- ============================================================
 local function updateStarsVisibility()
     starContainer.Visible = frame.Visible
 end
 
 frame:GetPropertyChangedSignal("Visible"):Connect(updateStarsVisibility)
-
--- ============================================================
---  ЗАГОЛОВОК (МАТОВЫЙ)
--- ============================================================
-local header = Instance.new("Frame")
-header.Size = UDim2.new(1, 0, 0, 55)
-header.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-header.BackgroundTransparency = 0  -- МАТОВЫЙ
-header.BorderSizePixel = 0
-header.Parent = frame
-
-local logoLetter = Instance.new("TextLabel")
-logoLetter.Size = UDim2.new(0, 40, 0, 40)
-logoLetter.Position = UDim2.new(0.02, 0, 0.5, -20)
-logoLetter.BackgroundTransparency = 1
-logoLetter.Text = "L"
-logoLetter.TextColor3 = Color3.fromRGB(255, 255, 255)
-logoLetter.TextSize = 38
-logoLetter.Font = Enum.Font.GothamBold
-logoLetter.Rotation = -12
-logoLetter.TextXAlignment = Enum.TextXAlignment.Center
-logoLetter.TextYAlignment = Enum.TextYAlignment.Center
-logoLetter.Parent = header
-
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(0.5, 0, 1, 0)
-title.Position = UDim2.new(0.08, 0, 0, 0)
-title.BackgroundTransparency = 1
-title.Text = "Letunium"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextSize = 22
-title.Font = Enum.Font.GothamMedium
-title.Rotation = -2
-title.TextXAlignment = Enum.TextXAlignment.Left
-title.Parent = header
-
--- ============================================================
---  КНОПКА M
--- ============================================================
-local mButton = Instance.new("TextButton")
-mButton.Size = UDim2.new(0, 55, 0, 55)
-mButton.Position = UDim2.new(1, -70, 1, -70)
-mButton.BackgroundColor3 = Color3.fromRGB(200, 30, 30)
-mButton.BackgroundTransparency = 0.1
-mButton.Text = "L"
-mButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-mButton.TextSize = 28
-mButton.Font = Enum.Font.GothamBold
-mButton.Visible = false
-mButton.Parent = gui
-
-local mCorners = Instance.new("UICorner")
-mCorners.CornerRadius = UDim.new(1, 0)
-mCorners.Parent = mButton
-
-local mStroke = Instance.new("UIStroke")
-mStroke.Thickness = 2
-mStroke.Color = Color3.fromRGB(255, 255, 255)
-mStroke.Transparency = 0.3
-mStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-mStroke.Parent = mButton
 
 -- ============================================================
 --  КОНТЕНТ (МАТОВЫЙ)
@@ -281,7 +277,7 @@ local contentPanel = Instance.new("Frame")
 contentPanel.Size = UDim2.new(1, 0, 1, -105)
 contentPanel.Position = UDim2.new(0, 0, 0, 55)
 contentPanel.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-contentPanel.BackgroundTransparency = 0  -- МАТОВЫЙ
+contentPanel.BackgroundTransparency = 0
 contentPanel.BorderSizePixel = 0
 contentPanel.Parent = frame
 
@@ -292,7 +288,7 @@ local bottomBar = Instance.new("Frame")
 bottomBar.Size = UDim2.new(1, 0, 0, 50)
 bottomBar.Position = UDim2.new(0, 0, 1, -50)
 bottomBar.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-bottomBar.BackgroundTransparency = 0  -- МАТОВЫЙ
+bottomBar.BackgroundTransparency = 0
 bottomBar.BorderSizePixel = 0
 bottomBar.Parent = frame
 
@@ -559,24 +555,16 @@ game:GetService("RunService").RenderStepped:Connect(function()
             transKnob.Position = UDim2.new(val, -8, 0.5, -8)
             local percent = math.round(val * 100)
             transLabel.Text = "Прозрачность: " .. percent .. "%"
-            -- Меняем прозрачность только если она не 0 (чтобы меню оставалось матовым при 0%)
-            if val > 0 then
-                frame.BackgroundTransparency = val * 0.8
-                header.BackgroundTransparency = val * 0.8
-                contentPanel.BackgroundTransparency = val * 0.8
-                bottomBar.BackgroundTransparency = val * 0.8
-            else
-                frame.BackgroundTransparency = 0
-                header.BackgroundTransparency = 0
-                contentPanel.BackgroundTransparency = 0
-                bottomBar.BackgroundTransparency = 0
-            end
+            frame.BackgroundTransparency = val * 0.8
+            header.BackgroundTransparency = val * 0.8
+            contentPanel.BackgroundTransparency = val * 0.8
+            bottomBar.BackgroundTransparency = val * 0.8
         end
     end
 end)
 
 -- ============================================================
---  КЛИК ПО ПАНЕЛИ
+--  УПРАВЛЕНИЕ ОТКРЫТИЕМ/ЗАКРЫТИЕМ
 -- ============================================================
 infoPanel.MouseButton1Click:Connect(function()
     if frame then
@@ -588,18 +576,12 @@ infoPanel.MouseButton1Click:Connect(function()
     end
 end)
 
--- ============================================================
---  КНОПКА M
--- ============================================================
 mButton.MouseButton1Click:Connect(function()
     frame.Visible = not frame.Visible
     mButton.Visible = false
     updateStarsVisibility()
 end)
 
--- ============================================================
---  F1
--- ============================================================
 game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.F1 then
