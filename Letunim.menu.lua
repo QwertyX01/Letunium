@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (ПОЛНАЯ РАБОЧАЯ ВЕРСИЯ)
+--  LETUNIUM HUB (ИСПРАВЛЕННАЯ ВЕРСИЯ)
 --  by Tormentor412
 -- ============================================================
 
@@ -232,11 +232,12 @@ bottomBar.BorderSizePixel = 0
 bottomBar.Parent = frame
 
 -- ============================================================
---  ВКЛАДКИ
+--  ВКЛАДКИ (ИСПРАВЛЕНО - БЕЗ SetAttribute)
 -- ============================================================
 local tabNames = {"VISUALS", "AIMBOT", "SETTINGS"}
 local tabButtons = {}
 local contentFrames = {}
+local underlines = {} -- Храним линии отдельно
 
 for i, tabName in ipairs(tabNames) do
     local btn = Instance.new("TextButton")
@@ -264,7 +265,7 @@ for i, tabName in ipairs(tabNames) do
     underline.BackgroundTransparency = (i == 1) and 0 or 1
     underline.BorderSizePixel = 0
     underline.Parent = btn
-    btn:SetAttribute("Underline", underline)
+    underlines[btn] = underline
 
     local content = Instance.new("Frame")
     content.Size = UDim2.new(1, -20, 1, -20)
@@ -284,7 +285,7 @@ for i, tabName in ipairs(tabNames) do
         for j = 1, #tabNames do
             contentFrames[j].Visible = (j == i)
             tabButtons[j].TextColor3 = (j == i) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 190)
-            local line = tabButtons[j]:GetAttribute("Underline")
+            local line = underlines[tabButtons[j]]
             if line then
                 line.BackgroundTransparency = (j == i) and 0 or 1
             end
@@ -332,6 +333,8 @@ local boxObjects = {}
 local distLabels = {}
 local lineObjects = {}
 
+local hasDrawing = pcall(function() return Drawing end) and Drawing ~= nil
+
 -- ============================================================
 --  ФУНКЦИИ ОЧИСТКИ
 -- ============================================================
@@ -354,12 +357,19 @@ local function clearDist()
 end
 
 local function clearLines()
-    for _, obj in pairs(lineObjects) do pcall(function() obj:Destroy() end) end
+    for _, obj in pairs(lineObjects) do
+        if type(obj) == "table" then
+            if obj.line then pcall(function() obj.line:Destroy() end) end
+            if obj.conn then pcall(function() obj.conn:Disconnect() end) end
+        else
+            pcall(function() obj:Destroy() end)
+        end
+    end
     lineObjects = {}
 end
 
 -- ============================================================
---  ESP
+--  ESP (Highlight)
 -- ============================================================
 local function updateESP()
     clearESP()
@@ -380,9 +390,11 @@ local function updateESP()
 end
 
 -- ============================================================
---  3D BOX
+--  3D BOX (ТОЛЬКО ЕСЛИ Drawing ДОСТУПЕН)
 -- ============================================================
 local function create3DBox(character)
+    if not hasDrawing then return {lines = {}, conn = nil} end
+    
     local lines = {}
     local corners = {
         Vector3.new(-2, -3, -2), Vector3.new(2, -3, -2), Vector3.new(2, -3, 2), Vector3.new(-2, -3, 2),
@@ -427,6 +439,10 @@ end
 local function updateBoxes()
     clearBoxes()
     if not boxEnabled then return end
+    if not hasDrawing then 
+        print("⚠️ Drawing API недоступна, 3D Box не работает")
+        return 
+    end
     for _, p in pairs(game.Players:GetPlayers()) do
         if p ~= player and p.Character then
             table.insert(boxObjects, create3DBox(p.Character))
@@ -464,21 +480,28 @@ local function updateDist()
 end
 
 -- ============================================================
---  LINE PLAYER
+--  LINE PLAYER (ТОЛЬКО ЕСЛИ Drawing ДОСТУПЕН)
 -- ============================================================
 local function updateLines()
     clearLines()
     if not lineEnabled then return end
+    if not hasDrawing then 
+        print("⚠️ Drawing API недоступна, Line Player не работает")
+        return 
+    end
+    
     local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
     if not root then return end
+    
     for _, p in pairs(game.Players:GetPlayers()) do
         if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
             local line = Drawing.new("Line")
             line.Color = Color3.fromRGB(255, 0, 0)
             line.Thickness = 2
             line.Transparency = 1
-            table.insert(lineObjects, line)
+            
             local conn = game:GetService("RunService").RenderStepped:Connect(function()
+                if not root or not root.Parent then return end
                 if not p.Character or not p.Character:FindFirstChild("HumanoidRootPart") then
                     line.Transparency = 1
                     return
@@ -494,7 +517,8 @@ local function updateLines()
                     line.Transparency = 1
                 end
             end)
-            table.insert(lineObjects, conn)
+            
+            table.insert(lineObjects, {line = line, conn = conn})
         end
     end
 end
