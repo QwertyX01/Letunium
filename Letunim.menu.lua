@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (ИНФО-ПАНЕЛЬ ОТКРЫВАЕТ МЕНЮ - ИСПРАВЛЕНО)
+--  LETUNIUM HUB (ИНФО-ПАНЕЛЬ ОТКРЫВАЕТ МЕНЮ)
 --  by Tormentor412
 -- ============================================================
 
@@ -10,6 +10,21 @@ local gui = Instance.new("ScreenGui")
 gui.Name = "LetuniumHub"
 gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
+
+-- ============================================================
+--  ОСНОВНОЕ МЕНЮ
+-- ============================================================
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 760, 0, 400)
+frame.Position = UDim2.new(0.5, -380, 0.5, -200)
+frame.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
+frame.BackgroundTransparency = 0
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.ClipsDescendants = true
+frame.Visible = true
+frame.Parent = gui
 
 -- ============================================================
 --  ПРИВЕТСТВИЕ
@@ -31,22 +46,7 @@ game:GetService("Debris"):AddItem(hello, 1.5)
 wait(1.5)
 
 -- ============================================================
---  ОСНОВНОЕ МЕНЮ (СОЗДАЁМ СНАЧАЛА)
--- ============================================================
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 760, 0, 400)
-frame.Position = UDim2.new(0.5, -380, 0.5, -200)
-frame.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
-frame.BackgroundTransparency = 0
-frame.BorderSizePixel = 0
-frame.Active = true
-frame.Draggable = true
-frame.ClipsDescendants = true
-frame.Visible = true
-frame.Parent = gui
-
--- ============================================================
---  ИНФО-ПАНЕЛЬ (ПОСЛЕ СОЗДАНИЯ frame)
+--  ИНФО-ПАНЕЛЬ
 -- ============================================================
 local infoPanel = Instance.new("Frame")
 infoPanel.Size = UDim2.new(0, 180, 0, 32)
@@ -60,7 +60,6 @@ local infoCorners = Instance.new("UICorner")
 infoCorners.CornerRadius = UDim.new(0, 8)
 infoCorners.Parent = infoPanel
 
--- НАЗВАНИЕ (Letunium)
 local infoTitle = Instance.new("TextLabel")
 infoTitle.Size = UDim2.new(0.6, 0, 1, 0)
 infoTitle.Position = UDim2.new(0.05, 0, 0, 0)
@@ -72,7 +71,6 @@ infoTitle.Font = Enum.Font.GothamBold
 infoTitle.TextXAlignment = Enum.TextXAlignment.Left
 infoTitle.Parent = infoPanel
 
--- СТАТУС (Opening) - СПРАВА ОТ НАЗВАНИЯ
 local infoStatus = Instance.new("TextLabel")
 infoStatus.Size = UDim2.new(0.35, 0, 1, 0)
 infoStatus.Position = UDim2.new(0.62, 0, 0, 0)
@@ -84,16 +82,12 @@ infoStatus.Font = Enum.Font.GothamMedium
 infoStatus.TextXAlignment = Enum.TextXAlignment.Left
 infoStatus.Parent = infoPanel
 
--- ============================================================
---  КЛИК ПО ПАНЕЛИ - ОТКРЫТИЕ/ЗАКРЫТИЕ МЕНЮ
--- ============================================================
-local menuOpen = true
+-- КЛИК ПО ПАНЕЛИ - ОТКРЫТИЕ/ЗАКРЫТИЕ МЕНЮ
 infoPanel.MouseButton1Click:Connect(function()
-    menuOpen = not menuOpen
     if frame then
-        frame.Visible = menuOpen
+        frame.Visible = not frame.Visible
         if mButton then
-            mButton.Visible = not menuOpen
+            mButton.Visible = not frame.Visible
         end
     end
 end)
@@ -278,7 +272,6 @@ mStroke.Parent = mButton
 mButton.MouseButton1Click:Connect(function()
     frame.Visible = not frame.Visible
     mButton.Visible = false
-    menuOpen = frame.Visible
 end)
 
 -- ============================================================
@@ -628,7 +621,6 @@ game:GetService("UserInputService").InputBegan:Connect(function(input, gameProce
     if input.KeyCode == Enum.KeyCode.F1 then
         if frame then
             frame.Visible = not frame.Visible
-            menuOpen = frame.Visible
             if frame.Visible then
                 mButton.Visible = false
             else
@@ -641,10 +633,8 @@ end)
 frame:GetPropertyChangedSignal("Visible"):Connect(function()
     if not frame.Visible then
         mButton.Visible = true
-        menuOpen = false
     else
         mButton.Visible = false
-        menuOpen = true
     end
 end)
 
