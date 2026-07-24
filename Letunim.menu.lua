@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (ИСПРАВЛЕННАЯ ВЕРСИЯ)
+--  LETUNIUM HUB (ИСПРАВЛЕНО: ESP УДАЛЯЕТСЯ ПОСЛЕ СМЕРТИ)
 --  by Tormentor412
 -- ============================================================
 
@@ -232,12 +232,12 @@ bottomBar.BorderSizePixel = 0
 bottomBar.Parent = frame
 
 -- ============================================================
---  ВКЛАДКИ (ИСПРАВЛЕНО - БЕЗ SetAttribute)
+--  ВКЛАДКИ
 -- ============================================================
 local tabNames = {"VISUALS", "AIMBOT", "SETTINGS"}
 local tabButtons = {}
 local contentFrames = {}
-local underlines = {} -- Храним линии отдельно
+local underlines = {}
 
 for i, tabName in ipairs(tabNames) do
     local btn = Instance.new("TextButton")
@@ -296,7 +296,7 @@ end
 tabButtons[1].TextColor3 = Color3.fromRGB(255, 255, 255)
 
 -- ============================================================
---  VISUALS (ВСЕ ФУНКЦИИ)
+--  VISUALS
 -- ============================================================
 local visualsContent = contentFrames[1]
 
@@ -332,6 +332,7 @@ local espObjects = {}
 local boxObjects = {}
 local distLabels = {}
 local lineObjects = {}
+local deathConnections = {}
 
 local hasDrawing = pcall(function() return Drawing end) and Drawing ~= nil
 
@@ -369,28 +370,76 @@ local function clearLines()
 end
 
 -- ============================================================
---  ESP (Highlight)
+--  ESP (С АВТОУДАЛЕНИЕМ ПОСЛЕ СМЕРТИ)
 -- ============================================================
 local function updateESP()
     clearESP()
     if not espEnabled then return end
+    
     for _, p in pairs(game.Players:GetPlayers()) do
         if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
-            local highlight = Instance.new("Highlight")
-            highlight.Adornee = p.Character
-            highlight.FillColor = Color3.fromRGB(255, 0, 0)
-            highlight.FillTransparency = 0.5
-            highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
-            highlight.OutlineTransparency = 0.3
-            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-            highlight.Parent = p.Character
-            table.insert(espObjects, highlight)
+            local humanoid = p.Character:FindFirstChild("Humanoid")
+            if humanoid and humanoid.Health > 0 then
+                local highlight = Instance.new("Highlight")
+                highlight.Adornee = p.Character
+                highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                highlight.FillTransparency = 0.5
+                highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+                highlight.OutlineTransparency = 0.3
+                highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                highlight.Parent = p.Character
+                table.insert(espObjects, highlight)
+            end
         end
     end
 end
 
+-- ОТСЛЕЖИВАНИЕ СМЕРТИ ДЛЯ УДАЛЕНИЯ ESP
+local function setupDeathTracking(p)
+    if p == player then return end
+    p.CharacterAdded:Connect(function(char)
+        local humanoid = char:WaitForChild("Humanoid")
+        local conn
+        conn = humanoid.HealthChanged:Connect(function()
+            if humanoid.Health <= 0 then
+                for i, obj in pairs(espObjects) do
+                    if obj.Adornee == char then
+                        pcall(function() obj:Destroy() end)
+                        espObjects[i] = nil
+                    end
+                end
+                local newObjects = {}
+                for _, obj in pairs(espObjects) do
+                    if obj then table.insert(newObjects, obj) end
+                end
+                espObjects = newObjects
+                if conn then conn:Disconnect() end
+            end
+        end)
+        table.insert(deathConnections, conn)
+    end)
+end
+
+-- ПОДПИСКА НА ИГРОКОВ
+for _, p in pairs(game.Players:GetPlayers()) do
+    setupDeathTracking(p)
+end
+
+game.Players.PlayerAdded:Connect(function(p)
+    setupDeathTracking(p)
+    p.CharacterAdded:Connect(function()
+        wait(0.5)
+        if espEnabled then updateESP() end
+    end)
+end)
+
+game.Players.PlayerRemoving:Connect(function()
+    wait(0.1)
+    if espEnabled then updateESP() end
+end)
+
 -- ============================================================
---  3D BOX (ТОЛЬКО ЕСЛИ Drawing ДОСТУПЕН)
+--  3D BOX
 -- ============================================================
 local function create3DBox(character)
     if not hasDrawing then return {lines = {}, conn = nil} end
@@ -480,7 +529,7 @@ local function updateDist()
 end
 
 -- ============================================================
---  LINE PLAYER (ТОЛЬКО ЕСЛИ Drawing ДОСТУПЕН)
+--  LINE PLAYER
 -- ============================================================
 local function updateLines()
     clearLines()
@@ -646,7 +695,7 @@ end
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, yPos + 50)
 
 -- ============================================================
---  ОБНОВЛЕНИЕ ПРИ ПОЯВЛЕНИИ ИГРОКОВ
+--  ОБНОВЛЕНИЕ ПОЯВЛЕНИЯ ИГРОКОВ
 -- ============================================================
 game.Players.PlayerAdded:Connect(function(p)
     p.CharacterAdded:Connect(function()
@@ -735,3 +784,4 @@ watermark.Parent = frame
 print("✅ Letunium Hub загружен успешно!")
 print("🔑 Нажми на панель Letunium Opening чтобы открыть/закрыть")
 print("🎨 VISUALS: ESP, 3D Box, Distance, Line Player, Sky Color")
+print("✅ ESP автоматически удаляется после смерти игрока")
