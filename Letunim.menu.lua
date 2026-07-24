@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (ИНФО-ПАНЕЛЬ СВЕРХУ, ОТКРЫВАЕТ МЕНЮ)
+--  LETUNIUM HUB (ИНФО-ПАНЕЛЬ ОТКРЫВАЕТ МЕНЮ - ИСПРАВЛЕНО)
 --  by Tormentor412
 -- ============================================================
 
@@ -12,7 +12,41 @@ gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
 -- ============================================================
---  ИНФО-ПАНЕЛЬ (МАТОВАЯ, ВЫСОКАЯ)
+--  ПРИВЕТСТВИЕ
+-- ============================================================
+local hello = Instance.new("TextLabel")
+hello.Size = UDim2.new(1, 0, 1, 0)
+hello.BackgroundTransparency = 1
+hello.Text = "LETUNIUM HUB"
+hello.TextColor3 = Color3.fromRGB(255, 255, 255)
+hello.TextScaled = true
+hello.Font = Enum.Font.GothamBold
+hello.TextStrokeColor3 = Color3.fromRGB(200, 200, 200)
+hello.TextStrokeTransparency = 0.5
+hello.Parent = gui
+
+game:GetService("TweenService"):Create(hello, TweenInfo.new(1.5, Enum.EasingStyle.Quad), {TextTransparency = 1}):Play()
+game:GetService("Debris"):AddItem(hello, 1.5)
+
+wait(1.5)
+
+-- ============================================================
+--  ОСНОВНОЕ МЕНЮ (СОЗДАЁМ СНАЧАЛА)
+-- ============================================================
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 760, 0, 400)
+frame.Position = UDim2.new(0.5, -380, 0.5, -200)
+frame.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
+frame.BackgroundTransparency = 0
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.ClipsDescendants = true
+frame.Visible = true
+frame.Parent = gui
+
+-- ============================================================
+--  ИНФО-ПАНЕЛЬ (ПОСЛЕ СОЗДАНИЯ frame)
 -- ============================================================
 local infoPanel = Instance.new("Frame")
 infoPanel.Size = UDim2.new(0, 180, 0, 32)
@@ -50,52 +84,19 @@ infoStatus.Font = Enum.Font.GothamMedium
 infoStatus.TextXAlignment = Enum.TextXAlignment.Left
 infoStatus.Parent = infoPanel
 
--- КЛИК ПО ПАНЕЛИ - ОТКРЫТИЕ/ЗАКРЫТИЕ МЕНЮ
+-- ============================================================
+--  КЛИК ПО ПАНЕЛИ - ОТКРЫТИЕ/ЗАКРЫТИЕ МЕНЮ
+-- ============================================================
 local menuOpen = true
 infoPanel.MouseButton1Click:Connect(function()
     menuOpen = not menuOpen
     if frame then
         frame.Visible = menuOpen
-        if not menuOpen then
-            mButton.Visible = true
-        else
-            mButton.Visible = false
+        if mButton then
+            mButton.Visible = not menuOpen
         end
     end
 end)
-
--- ============================================================
---  ПРИВЕТСТВИЕ
--- ============================================================
-local hello = Instance.new("TextLabel")
-hello.Size = UDim2.new(1, 0, 1, 0)
-hello.BackgroundTransparency = 1
-hello.Text = "LETUNIUM HUB"
-hello.TextColor3 = Color3.fromRGB(255, 255, 255)
-hello.TextScaled = true
-hello.Font = Enum.Font.GothamBold
-hello.TextStrokeColor3 = Color3.fromRGB(200, 200, 200)
-hello.TextStrokeTransparency = 0.5
-hello.Parent = gui
-
-game:GetService("TweenService"):Create(hello, TweenInfo.new(1.5, Enum.EasingStyle.Quad), {TextTransparency = 1}):Play()
-game:GetService("Debris"):AddItem(hello, 1.5)
-
-wait(1.5)
-
--- ============================================================
---  ОСНОВНОЕ МЕНЮ
--- ============================================================
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 760, 0, 400)
-frame.Position = UDim2.new(0.5, -380, 0.5, -200)
-frame.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
-frame.BackgroundTransparency = 0
-frame.BorderSizePixel = 0
-frame.Active = true
-frame.Draggable = true
-frame.ClipsDescendants = true
-frame.Parent = gui
 
 -- ============================================================
 --  ЗВЁЗДЫ
@@ -277,6 +278,7 @@ mStroke.Parent = mButton
 mButton.MouseButton1Click:Connect(function()
     frame.Visible = not frame.Visible
     mButton.Visible = false
+    menuOpen = frame.Visible
 end)
 
 -- ============================================================
@@ -626,6 +628,7 @@ game:GetService("UserInputService").InputBegan:Connect(function(input, gameProce
     if input.KeyCode == Enum.KeyCode.F1 then
         if frame then
             frame.Visible = not frame.Visible
+            menuOpen = frame.Visible
             if frame.Visible then
                 mButton.Visible = false
             else
@@ -638,6 +641,10 @@ end)
 frame:GetPropertyChangedSignal("Visible"):Connect(function()
     if not frame.Visible then
         mButton.Visible = true
+        menuOpen = false
+    else
+        mButton.Visible = false
+        menuOpen = true
     end
 end)
 
