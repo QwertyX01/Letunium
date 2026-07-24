@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (С ИНФО-ПАНЕЛЬЮ В ЛЕВОМ ВЕРХНЕМ УГЛУ)
+--  LETUNIUM HUB (ИНФО-ПАНЕЛЬ СВЕРХУ, ОТКРЫВАЕТ МЕНЮ)
 --  by Tormentor412
 -- ============================================================
 
@@ -12,13 +12,13 @@ gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
 -- ============================================================
---  ИНФО-ПАНЕЛЬ В ЛЕВОМ ВЕРХНЕМ УГЛУ
+--  ИНФО-ПАНЕЛЬ (МАТОВАЯ, ВЫСОКАЯ)
 -- ============================================================
 local infoPanel = Instance.new("Frame")
-infoPanel.Size = UDim2.new(0, 140, 0, 60)
+infoPanel.Size = UDim2.new(0, 180, 0, 32)
 infoPanel.Position = UDim2.new(0.01, 0, 0.01, 0)
 infoPanel.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
-infoPanel.BackgroundTransparency = 0.2
+infoPanel.BackgroundTransparency = 0
 infoPanel.BorderSizePixel = 0
 infoPanel.Parent = gui
 
@@ -28,27 +28,41 @@ infoCorners.Parent = infoPanel
 
 -- НАЗВАНИЕ (Letunium)
 local infoTitle = Instance.new("TextLabel")
-infoTitle.Size = UDim2.new(1, 0, 0.5, 0)
-infoTitle.Position = UDim2.new(0, 0, 0, 0)
+infoTitle.Size = UDim2.new(0.6, 0, 1, 0)
+infoTitle.Position = UDim2.new(0.05, 0, 0, 0)
 infoTitle.BackgroundTransparency = 1
 infoTitle.Text = "Letunium"
 infoTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 infoTitle.TextSize = 16
 infoTitle.Font = Enum.Font.GothamBold
-infoTitle.TextXAlignment = Enum.TextXAlignment.Center
+infoTitle.TextXAlignment = Enum.TextXAlignment.Left
 infoTitle.Parent = infoPanel
 
--- СТАТУС (Opening)
+-- СТАТУС (Opening) - СПРАВА ОТ НАЗВАНИЯ
 local infoStatus = Instance.new("TextLabel")
-infoStatus.Size = UDim2.new(1, 0, 0.4, 0)
-infoStatus.Position = UDim2.new(0, 0, 0.5, 0)
+infoStatus.Size = UDim2.new(0.35, 0, 1, 0)
+infoStatus.Position = UDim2.new(0.62, 0, 0, 0)
 infoStatus.BackgroundTransparency = 1
 infoStatus.Text = "Opening"
 infoStatus.TextColor3 = Color3.fromRGB(255, 255, 255)
 infoStatus.TextSize = 13
 infoStatus.Font = Enum.Font.GothamMedium
-infoStatus.TextXAlignment = Enum.TextXAlignment.Center
+infoStatus.TextXAlignment = Enum.TextXAlignment.Left
 infoStatus.Parent = infoPanel
+
+-- КЛИК ПО ПАНЕЛИ - ОТКРЫТИЕ/ЗАКРЫТИЕ МЕНЮ
+local menuOpen = true
+infoPanel.MouseButton1Click:Connect(function()
+    menuOpen = not menuOpen
+    if frame then
+        frame.Visible = menuOpen
+        if not menuOpen then
+            mButton.Visible = true
+        else
+            mButton.Visible = false
+        end
+    end
+end)
 
 -- ============================================================
 --  ПРИВЕТСТВИЕ
