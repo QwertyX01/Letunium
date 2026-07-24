@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (ПРОСТАЯ РАБОЧАЯ ВЕРСИЯ)
+--  LETUNIUM HUB (РАБОЧАЯ ВЕРСИЯ)
 --  by Tormentor412
 -- ============================================================
 
@@ -81,7 +81,7 @@ title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = header
 
 -- ============================================================
---  ИНФО-ПАНЕЛЬ (КНОПКА ДЛЯ ОТКРЫТИЯ/ЗАКРЫТИЯ)
+--  ИНФО-ПАНЕЛЬ (TEXTBUTTON - ОТКРЫВАЕТ/ЗАКРЫВАЕТ МЕНЮ)
 -- ============================================================
 local infoPanel = Instance.new("TextButton")
 infoPanel.Size = UDim2.new(0, 180, 0, 32)
@@ -120,21 +120,24 @@ infoStatus.TextXAlignment = Enum.TextXAlignment.Left
 infoStatus.Parent = infoPanel
 
 -- ============================================================
---  ЗВЁЗДЫ (ТОЛЬКО ПРИ ОТКРЫТОМ МЕНЮ)
+--  ЗВЁЗДЫ (ЛЕТАЮТ ПО ПЕРИМЕТРУ, ТОЛЬКО ПРИ ОТКРЫТОМ МЕНЮ)
 -- ============================================================
-local stars = {}
 local starContainer = Instance.new("Frame")
 starContainer.Size = UDim2.new(1, 0, 1, 0)
 starContainer.BackgroundTransparency = 1
 starContainer.Visible = true
+starContainer.ZIndex = 0
 starContainer.Parent = gui
 
-for i = 1, 50 do
+local stars = {}
+local tween = game:GetService("TweenService")
+
+for i = 1, 40 do
     local star = Instance.new("Frame")
     local size = math.random(3, 7)
     star.Size = UDim2.new(0, size, 0, size)
     star.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    star.BackgroundTransparency = 0.3 + math.random(0, 50) / 100
+    star.BackgroundTransparency = 0.2 + math.random(0, 50) / 100
     star.BorderSizePixel = 0
     star.Parent = starContainer
     
@@ -142,50 +145,79 @@ for i = 1, 50 do
     starCorners.CornerRadius = UDim.new(1, 0)
     starCorners.Parent = star
     
-    star.Position = UDim2.new(0, math.random(-100, 1000), 0, math.random(-100, 800))
+    local side = math.random(1, 4)
+    local x, y
+    if side == 1 then
+        x = math.random(-100, 900)
+        y = math.random(-100, -30)
+    elseif side == 2 then
+        x = math.random(800, 900)
+        y = math.random(-100, 500)
+    elseif side == 3 then
+        x = math.random(-100, 900)
+        y = math.random(450, 500)
+    else
+        x = math.random(-100, -30)
+        y = math.random(-100, 500)
+    end
+    
+    star.Position = UDim2.new(0, x, 0, y)
     star.Rotation = math.random(0, 360)
     
     table.insert(stars, {
         star = star,
+        x = x,
+        y = y,
         speedX = (math.random() - 0.5) * 2,
         speedY = (math.random() - 0.5) * 2,
-        x = star.Position.X.Offset,
-        y = star.Position.Y.Offset
+        size = size
     })
 end
 
--- Анимация звёзд
 game:GetService("RunService").RenderStepped:Connect(function()
     if not starContainer.Visible then return end
+    
+    local menuCenterX = 0.5 * gui.AbsoluteSize.X
+    local menuCenterY = 0.5 * gui.AbsoluteSize.Y
+    
     for _, data in pairs(stars) do
         data.x = data.x + data.speedX
         data.y = data.y + data.speedY
         
-        if data.x > 1100 then data.x = -100 end
-        if data.x < -100 then data.x = 1100 end
-        if data.y > 900 then data.y = -100 end
-        if data.y < -100 then data.y = 900 end
+        local dx = data.x - menuCenterX
+        local dy = data.y - menuCenterY
+        local dist = math.sqrt(dx*dx + dy*dy)
+        
+        if dist < 380 then
+            data.x = data.x + (dx / (dist + 0.001)) * 0.5
+            data.y = data.y + (dy / (dist + 0.001)) * 0.5
+        end
+        
+        if data.x > 1000 then data.x = -100 end
+        if data.x < -100 then data.x = 1000 end
+        if data.y > 550 then data.y = -100 end
+        if data.y < -100 then data.y = 550 end
         
         data.star.Position = UDim2.new(0, data.x, 0, data.y)
+        
+        local rot = data.star.Rotation + 1
+        data.star.Rotation = rot % 360
     end
 end)
 
--- ============================================================
---  УПРАВЛЕНИЕ ЗВЁЗДАМИ (ПОКАЗЫВАТЬ ТОЛЬКО КОГДА МЕНЮ ОТКРЫТО)
--- ============================================================
-local function updateStars()
+local function updateStarsVisibility()
     starContainer.Visible = frame.Visible
 end
 
-frame:GetPropertyChangedSignal("Visible"):Connect(updateStars)
-updateStars()
+frame:GetPropertyChangedSignal("Visible"):Connect(updateStarsVisibility)
+updateStarsVisibility()
 
 -- ============================================================
---  ОТКРЫТИЕ/ЗАКРЫТИЕ МЕНЮ
+--  КЛИК ПО ПАНЕЛИ - ОТКРЫТИЕ/ЗАКРЫТИЕ МЕНЮ
 -- ============================================================
 infoPanel.MouseButton1Click:Connect(function()
     frame.Visible = not frame.Visible
-    updateStars()
+    updateStarsVisibility()
 end)
 
 -- ============================================================
@@ -199,9 +231,6 @@ contentPanel.BackgroundTransparency = 0
 contentPanel.BorderSizePixel = 0
 contentPanel.Parent = frame
 
--- ============================================================
---  НИЖНЯЯ ПАНЕЛЬ
--- ============================================================
 local bottomBar = Instance.new("Frame")
 bottomBar.Size = UDim2.new(1, 0, 0, 50)
 bottomBar.Position = UDim2.new(0, 0, 1, -50)
@@ -298,19 +327,17 @@ espBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 espBtn.TextSize = 18
 espBtn.Font = Enum.Font.SourceSansBold
 espBtn.Parent = contentFrames[1]
-
 local espCorners = Instance.new("UICorner")
 espCorners.CornerRadius = UDim.new(0, 10)
 espCorners.Parent = espBtn
 
 local espEnabled = false
-local espHighlights = {}
+local espLabels = {}
 
 espBtn.MouseButton1Click:Connect(function()
     espEnabled = not espEnabled
-    espBtn.Text = espEnabled and "ESP: Вкл" or "ESP: Выкл"
-    
     if espEnabled then
+        espBtn.Text = "ESP: Вкл"
         for _, p in pairs(game.Players:GetPlayers()) do
             if p ~= player and p.Character then
                 local highlight = Instance.new("Highlight")
@@ -319,14 +346,15 @@ espBtn.MouseButton1Click:Connect(function()
                 highlight.FillTransparency = 0.5
                 highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
                 highlight.Parent = p.Character
-                espHighlights[p] = highlight
+                espLabels[p] = highlight
             end
         end
     else
-        for _, h in pairs(espHighlights) do
+        espBtn.Text = "ESP: Выкл"
+        for _, h in pairs(espLabels) do
             h:Destroy()
         end
-        espHighlights = {}
+        espLabels = {}
     end
 end)
 
@@ -345,4 +373,3 @@ watermark.TextTransparency = 0.6
 watermark.Parent = frame
 
 print("✅ Letunium Hub загружен успешно!")
-print("🔑 Нажми на панель Letunium Opening чтобы открыть/закрыть")
