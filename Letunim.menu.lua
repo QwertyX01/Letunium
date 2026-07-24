@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (РАБОЧАЯ ВЕРСИЯ)
+--  LETUNIUM HUB (VISUALS + SKY COLOR)
 --  by Tormentor412
 -- ============================================================
 
@@ -81,7 +81,7 @@ title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = header
 
 -- ============================================================
---  ИНФО-ПАНЕЛЬ (TEXTBUTTON - ОТКРЫВАЕТ/ЗАКРЫВАЕТ МЕНЮ)
+--  ИНФО-ПАНЕЛЬ (ОТКРЫВАЕТ/ЗАКРЫВАЕТ МЕНЮ)
 -- ============================================================
 local infoPanel = Instance.new("TextButton")
 infoPanel.Size = UDim2.new(0, 180, 0, 32)
@@ -119,8 +119,12 @@ infoStatus.Font = Enum.Font.GothamMedium
 infoStatus.TextXAlignment = Enum.TextXAlignment.Left
 infoStatus.Parent = infoPanel
 
+infoPanel.MouseButton1Click:Connect(function()
+    frame.Visible = not frame.Visible
+end)
+
 -- ============================================================
---  ЗВЁЗДЫ (ЛЕТАЮТ ПО ПЕРИМЕТРУ, ТОЛЬКО ПРИ ОТКРЫТОМ МЕНЮ)
+--  ЗВЁЗДЫ
 -- ============================================================
 local starContainer = Instance.new("Frame")
 starContainer.Size = UDim2.new(1, 0, 1, 0)
@@ -130,7 +134,6 @@ starContainer.ZIndex = 0
 starContainer.Parent = gui
 
 local stars = {}
-local tween = game:GetService("TweenService")
 
 for i = 1, 40 do
     local star = Instance.new("Frame")
@@ -169,8 +172,7 @@ for i = 1, 40 do
         x = x,
         y = y,
         speedX = (math.random() - 0.5) * 2,
-        speedY = (math.random() - 0.5) * 2,
-        size = size
+        speedY = (math.random() - 0.5) * 2
     })
 end
 
@@ -199,9 +201,7 @@ game:GetService("RunService").RenderStepped:Connect(function()
         if data.y < -100 then data.y = 550 end
         
         data.star.Position = UDim2.new(0, data.x, 0, data.y)
-        
-        local rot = data.star.Rotation + 1
-        data.star.Rotation = rot % 360
+        data.star.Rotation = (data.star.Rotation + 1) % 360
     end
 end)
 
@@ -211,14 +211,6 @@ end
 
 frame:GetPropertyChangedSignal("Visible"):Connect(updateStarsVisibility)
 updateStarsVisibility()
-
--- ============================================================
---  КЛИК ПО ПАНЕЛИ - ОТКРЫТИЕ/ЗАКРЫТИЕ МЕНЮ
--- ============================================================
-infoPanel.MouseButton1Click:Connect(function()
-    frame.Visible = not frame.Visible
-    updateStarsVisibility()
-end)
 
 -- ============================================================
 --  КОНТЕНТ
@@ -291,13 +283,12 @@ for i, tabName in ipairs(tabNames) do
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, 0, 1, 0)
     label.BackgroundTransparency = 1
-    label.Text = tabName .. "\n\n(функции будут здесь)"
-    label.TextColor3 = Color3.fromRGB(180, 180, 190)
-    label.TextSize = 16
-    label.Font = Enum.Font.GothamLight
+    label.Text = tabName
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextSize = 18
+    label.Font = Enum.Font.GothamBold
     label.TextXAlignment = Enum.TextXAlignment.Center
-    label.TextYAlignment = Enum.TextYAlignment.Center
-    label.TextWrapped = true
+    label.TextYAlignment = Enum.TextYAlignment.Top
     label.Parent = content
 
     btn.MouseButton1Click:Connect(function()
@@ -315,46 +306,384 @@ end
 tabButtons[1].TextColor3 = Color3.fromRGB(255, 255, 255)
 
 -- ============================================================
---  VISUALS (ESP)
+--  VISUALS (ESP + TEAM CHECK + DISTANCE + LINE + SKY)
+-- ============================================================
+local visualsContent = contentFrames[1]
+
+-- УДАЛЯЕМ СТАРЫЙ ЛЕЙБЛ
+for _, child in pairs(visualsContent:GetChildren()) do
+    if child:IsA("TextLabel") then
+        child:Destroy()
+    end
+end
+
+local yPos = 0.08
+local spacing = 0.09
+
+-- ============================================================
+--  ESP
 -- ============================================================
 local espBtn = Instance.new("TextButton")
-espBtn.Size = UDim2.new(0, 200, 0, 40)
-espBtn.Position = UDim2.new(0, 10, 0.15, 0)
+espBtn.Size = UDim2.new(0, 200, 0, 35)
+espBtn.Position = UDim2.new(0, 10, yPos, 0)
 espBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
 espBtn.BackgroundTransparency = 0.3
-espBtn.Text = "ESP: Выкл"
+espBtn.Text = "☐ ESP"
 espBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-espBtn.TextSize = 18
+espBtn.TextSize = 16
 espBtn.Font = Enum.Font.SourceSansBold
-espBtn.Parent = contentFrames[1]
+espBtn.TextXAlignment = Enum.TextXAlignment.Left
+espBtn.Parent = visualsContent
 local espCorners = Instance.new("UICorner")
-espCorners.CornerRadius = UDim.new(0, 10)
+espCorners.CornerRadius = UDim.new(0, 8)
 espCorners.Parent = espBtn
 
 local espEnabled = false
-local espLabels = {}
+local espObjects = {}
+
+local function clearESP()
+    for _, obj in pairs(espObjects) do
+        pcall(function() obj:Destroy() end)
+    end
+    espObjects = {}
+end
+
+local function updateESP()
+    clearESP()
+    if not espEnabled then return end
+    
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
+            local highlight = Instance.new("Highlight")
+            highlight.Adornee = p.Character
+            highlight.FillColor = Color3.fromRGB(255, 0, 0)
+            highlight.FillTransparency = 0.5
+            highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+            highlight.OutlineTransparency = 0.3
+            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            highlight.Parent = p.Character
+            table.insert(espObjects, highlight)
+        end
+    end
+end
 
 espBtn.MouseButton1Click:Connect(function()
     espEnabled = not espEnabled
-    if espEnabled then
-        espBtn.Text = "ESP: Вкл"
-        for _, p in pairs(game.Players:GetPlayers()) do
-            if p ~= player and p.Character then
-                local highlight = Instance.new("Highlight")
-                highlight.Adornee = p.Character
-                highlight.FillColor = Color3.fromRGB(255, 0, 0)
-                highlight.FillTransparency = 0.5
-                highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                highlight.Parent = p.Character
-                espLabels[p] = highlight
+    espBtn.Text = espEnabled and "☑ ESP" or "☐ ESP"
+    updateESP()
+end)
+
+yPos = yPos + spacing
+
+-- ============================================================
+--  TEAM CHECK
+-- ============================================================
+local teamBtn = Instance.new("TextButton")
+teamBtn.Size = UDim2.new(0, 200, 0, 35)
+teamBtn.Position = UDim2.new(0, 10, yPos, 0)
+teamBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+teamBtn.BackgroundTransparency = 0.3
+teamBtn.Text = "☐ Team Check"
+teamBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+teamBtn.TextSize = 16
+teamBtn.Font = Enum.Font.SourceSansBold
+teamBtn.TextXAlignment = Enum.TextXAlignment.Left
+teamBtn.Parent = visualsContent
+local teamCorners = Instance.new("UICorner")
+teamCorners.CornerRadius = UDim.new(0, 8)
+teamCorners.Parent = teamBtn
+
+local teamEnabled = false
+local teamLabels = {}
+
+local function clearTeam()
+    for _, obj in pairs(teamLabels) do
+        pcall(function() obj:Destroy() end)
+    end
+    teamLabels = {}
+end
+
+local function updateTeam()
+    clearTeam()
+    if not teamEnabled then return end
+    
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
+            local bill = Instance.new("BillboardGui")
+            bill.Size = UDim2.new(0, 120, 0, 30)
+            bill.Adornee = p.Character.Head
+            bill.StudsOffset = Vector3.new(0, 2.5, 0)
+            bill.AlwaysOnTop = true
+            bill.Parent = p.Character
+            
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.Text = "ENEMY"
+            label.TextColor3 = Color3.fromRGB(255, 0, 0)
+            label.TextSize = 18
+            label.Font = Enum.Font.GothamBold
+            label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+            label.TextStrokeTransparency = 0.3
+            label.Parent = bill
+            
+            table.insert(teamLabels, bill)
+        end
+    end
+end
+
+teamBtn.MouseButton1Click:Connect(function()
+    teamEnabled = not teamEnabled
+    teamBtn.Text = teamEnabled and "☑ Team Check" or "☐ Team Check"
+    updateTeam()
+end)
+
+yPos = yPos + spacing
+
+-- ============================================================
+--  DISTANCE
+-- ============================================================
+local distBtn = Instance.new("TextButton")
+distBtn.Size = UDim2.new(0, 200, 0, 35)
+distBtn.Position = UDim2.new(0, 10, yPos, 0)
+distBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+distBtn.BackgroundTransparency = 0.3
+distBtn.Text = "☐ Distance"
+distBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+distBtn.TextSize = 16
+distBtn.Font = Enum.Font.SourceSansBold
+distBtn.TextXAlignment = Enum.TextXAlignment.Left
+distBtn.Parent = visualsContent
+local distCorners = Instance.new("UICorner")
+distCorners.CornerRadius = UDim.new(0, 8)
+distCorners.Parent = distBtn
+
+local distEnabled = false
+local distLabels = {}
+
+local function clearDist()
+    for _, obj in pairs(distLabels) do
+        pcall(function() obj:Destroy() end)
+    end
+    distLabels = {}
+end
+
+local function updateDist()
+    clearDist()
+    if not distEnabled then return end
+    
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
+            local bill = Instance.new("BillboardGui")
+            bill.Size = UDim2.new(0, 100, 0, 25)
+            bill.Adornee = p.Character.Head
+            bill.StudsOffset = Vector3.new(0, 2, 0)
+            bill.AlwaysOnTop = true
+            bill.Parent = p.Character
+            
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.Text = "0м"
+            label.TextColor3 = Color3.fromRGB(0, 255, 255)
+            label.TextSize = 14
+            label.Font = Enum.Font.GothamBold
+            label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+            label.TextStrokeTransparency = 0.3
+            label.Parent = bill
+            
+            table.insert(distLabels, bill)
+        end
+    end
+end
+
+distBtn.MouseButton1Click:Connect(function()
+    distEnabled = not distEnabled
+    distBtn.Text = distEnabled and "☑ Distance" or "☐ Distance"
+    updateDist()
+end)
+
+yPos = yPos + spacing
+
+-- ============================================================
+--  LINE PLAYER
+-- ============================================================
+local lineBtn = Instance.new("TextButton")
+lineBtn.Size = UDim2.new(0, 200, 0, 35)
+lineBtn.Position = UDim2.new(0, 10, yPos, 0)
+lineBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+lineBtn.BackgroundTransparency = 0.3
+lineBtn.Text = "☐ Line Player"
+lineBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+lineBtn.TextSize = 16
+lineBtn.Font = Enum.Font.SourceSansBold
+lineBtn.TextXAlignment = Enum.TextXAlignment.Left
+lineBtn.Parent = visualsContent
+local lineCorners = Instance.new("UICorner")
+lineCorners.CornerRadius = UDim.new(0, 8)
+lineCorners.Parent = lineBtn
+
+local lineEnabled = false
+local lineObjects = {}
+
+local function clearLines()
+    for _, obj in pairs(lineObjects) do
+        pcall(function() obj:Destroy() end)
+    end
+    lineObjects = {}
+end
+
+local function updateLines()
+    clearLines()
+    if not lineEnabled then return end
+    
+    local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local targetRoot = p.Character.HumanoidRootPart
+            
+            local line = Instance.new("Frame")
+            line.Size = UDim2.new(0, 2, 0, 2)
+            line.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+            line.BorderSizePixel = 0
+            line.Parent = gui
+            
+            table.insert(lineObjects, line)
+            
+            -- Обновление позиции линии в RenderStepped
+            local conn
+            conn = game:GetService("RunService").RenderStepped:Connect(function()
+                if not line or not line.Parent then
+                    if conn then conn:Disconnect() end
+                    return
+                end
+                
+                local pos1 = root.Position
+                local pos2 = targetRoot.Position
+                
+                local midPoint = (pos1 + pos2) / 2
+                local distance = (pos2 - pos1).Magnitude
+                local direction = (pos2 - pos1).Unit
+                
+                local screenPos, onScreen = workspace.CurrentCamera:WorldToScreenPoint(midPoint)
+                if onScreen then
+                    line.Position = UDim2.new(0, screenPos.X - 1, 0, screenPos.Y - 1)
+                    line.Size = UDim2.new(0, distance * 10, 0, 2)
+                    line.Rotation = math.deg(math.atan2(direction.Y, direction.X))
+                else
+                    line.Visible = false
+                end
+            end)
+            
+            table.insert(lineObjects, conn)
+        end
+    end
+end
+
+lineBtn.MouseButton1Click:Connect(function()
+    lineEnabled = not lineEnabled
+    lineBtn.Text = lineEnabled and "☑ Line Player" or "☐ Line Player"
+    updateLines()
+end)
+
+yPos = yPos + spacing + 0.02
+
+-- ============================================================
+--  SKY COLOR
+-- ============================================================
+local skyLabel = Instance.new("TextLabel")
+skyLabel.Size = UDim2.new(0, 150, 0, 30)
+skyLabel.Position = UDim2.new(0, 10, yPos, 0)
+skyLabel.BackgroundTransparency = 1
+skyLabel.Text = "Sky Color:"
+skyLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+skyLabel.TextSize = 16
+skyLabel.Font = Enum.Font.GothamBold
+skyLabel.TextXAlignment = Enum.TextXAlignment.Left
+skyLabel.Parent = visualsContent
+
+yPos = yPos + 0.06
+
+local skyColors = {
+    {name = "🌑", color = Color3.fromRGB(10, 10, 20)},
+    {name = "⬜", color = Color3.fromRGB(200, 200, 200)},
+    {name = "🌸", color = Color3.fromRGB(255, 150, 200)},
+    {name = "🌌", color = Color3.fromRGB(20, 30, 80)},
+    {name = "🌅", color = Color3.fromRGB(255, 150, 50)},
+    {name = "🌿", color = Color3.fromRGB(50, 150, 50)},
+    {name = "🔥", color = Color3.fromRGB(255, 100, 20)},
+    {name = "💜", color = Color3.fromRGB(150, 50, 200)},
+    {name = "🌊", color = Color3.fromRGB(50, 150, 255)}
+}
+
+local skyBtns = {}
+
+for i, data in ipairs(skyColors) do
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 55, 0, 35)
+    btn.Position = UDim2.new(0.05 + (i-1) * 0.09, 0, yPos, 0)
+    btn.BackgroundColor3 = data.color
+    btn.BackgroundTransparency = 0.1
+    btn.Text = data.name
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 14
+    btn.Font = Enum.Font.GothamBold
+    btn.Parent = visualsContent
+    
+    local btnCorners = Instance.new("UICorner")
+    btnCorners.CornerRadius = UDim.new(0, 6)
+    btnCorners.Parent = btn
+    
+    btn.MouseButton1Click:Connect(function()
+        local lighting = game:GetService("Lighting")
+        lighting.Ambient = data.color
+        lighting.OutdoorAmbient = data.color
+        print("🎨 Sky color changed to: " .. data.name)
+    end)
+    
+    table.insert(skyBtns, btn)
+end
+
+-- ============================================================
+--  ОБНОВЛЕНИЕ ESP ПРИ ПОЯВЛЕНИИ ИГРОКОВ
+-- ============================================================
+game.Players.PlayerAdded:Connect(function(p)
+    p.CharacterAdded:Connect(function()
+        wait(0.5)
+        if espEnabled then updateESP() end
+        if teamEnabled then updateTeam() end
+        if distEnabled then updateDist() end
+        if lineEnabled then updateLines() end
+    end)
+end)
+
+game.Players.PlayerRemoving:Connect(function()
+    if espEnabled then updateESP() end
+    if teamEnabled then updateTeam() end
+    if distEnabled then updateDist() end
+    if lineEnabled then updateLines() end
+end)
+
+-- ПЕРИОДИЧЕСКОЕ ОБНОВЛЕНИЕ DISTANCE
+game:GetService("RunService").RenderStepped:Connect(function()
+    if not distEnabled then return end
+    
+    local character = player.Character
+    if not character then return end
+    
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    
+    for _, bill in pairs(distLabels) do
+        if bill and bill.Adornee and bill.Adornee.Parent then
+            local distance = (root.Position - bill.Adornee.Position).Magnitude
+            local label = bill:FindFirstChildOfClass("TextLabel")
+            if label then
+                label.Text = math.round(distance) .. "м"
             end
         end
-    else
-        espBtn.Text = "ESP: Выкл"
-        for _, h in pairs(espLabels) do
-            h:Destroy()
-        end
-        espLabels = {}
     end
 end)
 
@@ -372,4 +701,44 @@ watermark.Font = Enum.Font.SourceSans
 watermark.TextTransparency = 0.6
 watermark.Parent = frame
 
+-- ============================================================
+--  AIMBOT (ЗАГЛУШКА)
+-- ============================================================
+local aimbotContent = contentFrames[2]
+for _, child in pairs(aimbotContent:GetChildren()) do
+    if child:IsA("TextLabel") then child:Destroy() end
+end
+
+local aimbotLabel = Instance.new("TextLabel")
+aimbotLabel.Size = UDim2.new(1, 0, 1, 0)
+aimbotLabel.BackgroundTransparency = 1
+aimbotLabel.Text = "AIMBOT\n\n(coming soon...)"
+aimbotLabel.TextColor3 = Color3.fromRGB(180, 180, 190)
+aimbotLabel.TextSize = 20
+aimbotLabel.Font = Enum.Font.GothamLight
+aimbotLabel.TextXAlignment = Enum.TextXAlignment.Center
+aimbotLabel.TextYAlignment = Enum.TextYAlignment.Center
+aimbotLabel.Parent = aimbotContent
+
+-- ============================================================
+--  SETTINGS (ЗАГЛУШКА)
+-- ============================================================
+local settingsContent = contentFrames[3]
+for _, child in pairs(settingsContent:GetChildren()) do
+    if child:IsA("TextLabel") then child:Destroy() end
+end
+
+local settingsLabel = Instance.new("TextLabel")
+settingsLabel.Size = UDim2.new(1, 0, 1, 0)
+settingsLabel.BackgroundTransparency = 1
+settingsLabel.Text = "SETTINGS\n\n(coming soon...)"
+settingsLabel.TextColor3 = Color3.fromRGB(180, 180, 190)
+settingsLabel.TextSize = 20
+settingsLabel.Font = Enum.Font.GothamLight
+settingsLabel.TextXAlignment = Enum.TextXAlignment.Center
+settingsLabel.TextYAlignment = Enum.TextYAlignment.Center
+settingsLabel.Parent = settingsContent
+
 print("✅ Letunium Hub загружен успешно!")
+print("🔑 Нажми на панель Letunium Opening чтобы открыть/закрыть")
+print("🎨 Sky Color: меняет небо в BloxStrike")
