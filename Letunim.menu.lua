@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (ИНФО-ПАНЕЛЬ ОТКРЫВАЕТ МЕНЮ)
+--  LETUNIUM HUB (ИНФО-ПАНЕЛЬ - TEXTBUTTON)
 --  by Tormentor412
 -- ============================================================
 
@@ -10,21 +10,6 @@ local gui = Instance.new("ScreenGui")
 gui.Name = "LetuniumHub"
 gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
-
--- ============================================================
---  ОСНОВНОЕ МЕНЮ
--- ============================================================
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 760, 0, 400)
-frame.Position = UDim2.new(0.5, -380, 0.5, -200)
-frame.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
-frame.BackgroundTransparency = 0
-frame.BorderSizePixel = 0
-frame.Active = true
-frame.Draggable = true
-frame.ClipsDescendants = true
-frame.Visible = true
-frame.Parent = gui
 
 -- ============================================================
 --  ПРИВЕТСТВИЕ
@@ -46,20 +31,38 @@ game:GetService("Debris"):AddItem(hello, 1.5)
 wait(1.5)
 
 -- ============================================================
---  ИНФО-ПАНЕЛЬ
+--  ОСНОВНОЕ МЕНЮ
 -- ============================================================
-local infoPanel = Instance.new("Frame")
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 760, 0, 400)
+frame.Position = UDim2.new(0.5, -380, 0.5, -200)
+frame.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
+frame.BackgroundTransparency = 0
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.ClipsDescendants = true
+frame.Visible = true
+frame.Parent = gui
+
+-- ============================================================
+--  ИНФО-ПАНЕЛЬ (TEXTBUTTON)
+-- ============================================================
+local infoPanel = Instance.new("TextButton")
 infoPanel.Size = UDim2.new(0, 180, 0, 32)
 infoPanel.Position = UDim2.new(0.01, 0, 0.01, 0)
 infoPanel.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
 infoPanel.BackgroundTransparency = 0
 infoPanel.BorderSizePixel = 0
+infoPanel.Text = ""
+infoPanel.AutoButtonColor = false
 infoPanel.Parent = gui
 
 local infoCorners = Instance.new("UICorner")
 infoCorners.CornerRadius = UDim.new(0, 8)
 infoCorners.Parent = infoPanel
 
+-- НАЗВАНИЕ (Letunium)
 local infoTitle = Instance.new("TextLabel")
 infoTitle.Size = UDim2.new(0.6, 0, 1, 0)
 infoTitle.Position = UDim2.new(0.05, 0, 0, 0)
@@ -71,6 +74,7 @@ infoTitle.Font = Enum.Font.GothamBold
 infoTitle.TextXAlignment = Enum.TextXAlignment.Left
 infoTitle.Parent = infoPanel
 
+-- СТАТУС (Opening)
 local infoStatus = Instance.new("TextLabel")
 infoStatus.Size = UDim2.new(0.35, 0, 1, 0)
 infoStatus.Position = UDim2.new(0.62, 0, 0, 0)
