@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (ГАЛАКТИКА ИЗ ЗВЁЗД ВОКРУГ МЕНЮ)
+--  LETUNIUM HUB (УГЛЫ ТОЛЬКО У ВКЛАДОК + ЗВЁЗДЫ)
 --  by Tormentor412
 -- ============================================================
 
@@ -45,57 +45,86 @@ frame.ClipsDescendants = true
 frame.Parent = gui
 
 -- ============================================================
---  ЗВЁЗДЫ (ГАЛАКТИКА) ВОКРУГ МЕНЮ
+--  ЗВЁЗДЫ (ДЕКОРАТИВНЫЕ, ЛЕТАЮТ ВОКРУГ МЕНЮ)
 -- ============================================================
-local stars = {}
-local starCount = 80
-local screenSize = game:GetService("GuiService").ScreenSize
+local starContainer = Instance.new("Frame")
+starContainer.Size = UDim2.new(1, 0, 1, 0)
+starContainer.BackgroundTransparency = 1
+starContainer.BorderSizePixel = 0
+starContainer.ZIndex = 0
+starContainer.Parent = gui
 
-for i = 1, starCount do
-    local star = Instance.new("Frame")
-    star.Size = UDim2.new(0, math.random(2, 4), 0, math.random(2, 4))
+local tweenService = game:GetService("TweenService")
+
+local function createStar()
+    local star = Instance.new("ImageLabel")
+    star.Size = UDim2.new(0, math.random(8, 16), 0, math.random(8, 16))
+    star.BackgroundTransparency = 1
+    star.Image = "rbxassetid://0" -- Пустая текстура
     star.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    star.BackgroundTransparency = math.random(30, 80) / 100
+    star.BackgroundTransparency = 0.2 + math.random(0, 50) / 100
     star.BorderSizePixel = 0
-    star.Parent = gui
+    star.ZIndex = 0
+    star.Parent = starContainer
     
-    local starCorners = Instance.new("UICorner")
-    starCorners.CornerRadius = UDim.new(1, 0)
-    starCorners.Parent = star
+    -- Случайная начальная позиция вокруг меню
+    local angle = math.rad(math.random(0, 360))
+    local distance = math.random(50, 350)
+    local centerX = 0.5 * gui.AbsoluteSize.X
+    local centerY = 0.5 * gui.AbsoluteSize.Y
+    star.Position = UDim2.new(0, centerX + math.cos(angle) * distance - star.Size.X.Offset/2, 0, centerY + math.sin(angle) * distance - star.Size.Y.Offset/2)
     
-    -- СЛУЧАЙНАЯ ПОЗИЦИЯ ВОКРУГ МЕНЮ
-    local x = math.random(-100, screenSize.X + 100)
-    local y = math.random(-100, screenSize.Y + 100)
-    star.Position = UDim2.new(0, x, 0, y)
+    -- Параметры движения
+    local speed = 0.2 + math.random() * 0.5
+    local orbitRadius = math.random(30, 200)
+    local startAngle = math.rad(math.random(0, 360))
+    local startSize = star.Size.X.Offset
     
-    -- СЛУЧАЙНАЯ СКОРОСТЬ И НАПРАВЛЕНИЕ
-    local speedX = (math.random() - 0.5) * 1.5
-    local speedY = (math.random() - 0.5) * 1.5
+    -- Анимация вращения
+    local rotationTween = tweenService:Create(star, TweenInfo.new(2 + math.random() * 3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+        Rotation = 360
+    })
+    rotationTween:Play()
     
-    stars[i] = {
-        star = star,
-        speedX = speedX,
-        speedY = speedY,
-        x = x,
-        y = y
-    }
+    -- Анимация прозрачности (мерцание)
+    local fadeTween = tweenService:Create(star, TweenInfo.new(1 + math.random() * 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+        BackgroundTransparency = 0.1 + math.random(0, 60) / 100
+    })
+    fadeTween:Play()
+    
+    -- Анимация размера (пульсация)
+    local sizeTween = tweenService:Create(star, TweenInfo.new(1.5 + math.random() * 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+        Size = UDim2.new(0, startSize + math.random(2, 6), 0, startSize + math.random(2, 6))
+    })
+    sizeTween:Play()
+    
+    -- Движение по орбите
+    local orbitConnection
+    orbitConnection = game:GetService("RunService").RenderStepped:Connect(function()
+        if not star.Parent then
+            orbitConnection:Disconnect()
+            return
+        end
+        
+        startAngle = startAngle + 0.01 * speed
+        local currentCenterX = 0.5 * gui.AbsoluteSize.X
+        local currentCenterY = 0.5 * gui.AbsoluteSize.Y
+        
+        local x = currentCenterX + math.cos(startAngle) * orbitRadius - star.Size.X.Offset/2
+        local y = currentCenterY + math.sin(startAngle) * orbitRadius - star.Size.Y.Offset/2
+        
+        star.Position = UDim2.new(0, x, 0, y)
+    end)
+    
+    star:SetAttribute("OrbitConnection", orbitConnection)
+    
+    return star
 end
 
--- АНИМАЦИЯ ЗВЁЗД
-game:GetService("RunService").RenderStepped:Connect(function()
-    for _, data in pairs(stars) do
-        data.x = data.x + data.speedX
-        data.y = data.y + data.speedY
-        
-        -- ТЕЛЕПОРТАЦИЯ ЗА ГРАНИЦЫ ЭКРАНА
-        if data.x < -100 then data.x = screenSize.X + 100 end
-        if data.x > screenSize.X + 100 then data.x = -100 end
-        if data.y < -100 then data.y = screenSize.Y + 100 end
-        if data.y > screenSize.Y + 100 then data.y = -100 end
-        
-        data.star.Position = UDim2.new(0, data.x, 0, data.y)
-    end
-end)
+-- Создаём 50 звёзд
+for i = 1, 50 do
+    createStar()
+end
 
 -- ============================================================
 --  ЗАГОЛОВОК (ПРЯМЫЕ УГЛЫ)
@@ -209,6 +238,7 @@ for i, tabName in ipairs(tabNames) do
     btn.Parent = bottomBar
     tabButtons[i] = btn
 
+    -- СКРУГЛЕНИЕ УГЛОВ У КАЖДОЙ ВКЛАДКИ
     local btnCorners = Instance.new("UICorner")
     btnCorners.CornerRadius = UDim.new(0, 10)
     btnCorners.Parent = btn
@@ -232,6 +262,7 @@ for i, tabName in ipairs(tabNames) do
     content.Parent = contentPanel
     contentFrames[i] = content
 
+    -- СКРУГЛЕНИЕ УГЛОВ У КОНТЕНТА ВКЛАДКИ
     local contentCorners = Instance.new("UICorner")
     contentCorners.CornerRadius = UDim.new(0, 10)
     contentCorners.Parent = content
