@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (С COLOR PICKER)
+--  LETUNIUM HUB (HSV COLOR PICKER)
 --  by Tormentor412
 -- ============================================================
 
@@ -81,7 +81,7 @@ title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = header
 
 -- ============================================================
---  ИНФО-ПАНЕЛЬ (ОТКРЫВАЕТ/ЗАКРЫВАЕТ МЕНЮ)
+--  ИНФО-ПАНЕЛЬ
 -- ============================================================
 local infoPanel = Instance.new("TextButton")
 infoPanel.Size = UDim2.new(0, 180, 0, 32)
@@ -121,6 +121,10 @@ infoStatus.Parent = infoPanel
 
 infoPanel.MouseButton1Click:Connect(function()
     frame.Visible = not frame.Visible
+    -- Если меню скрыто, скрываем и Color Picker
+    if not frame.Visible and colorPickerFrame then
+        colorPickerFrame.Visible = false
+    end
 end)
 
 -- ============================================================
@@ -394,7 +398,6 @@ local function updateESP()
     end
 end
 
--- ОТСЛЕЖИВАНИЕ СМЕРТИ
 local function setupDeathTracking(p)
     if p == player then return end
     p.CharacterAdded:Connect(function(char)
@@ -633,13 +636,13 @@ end)
 yPos = yPos + spacing + 10
 
 -- ============================================================
---  SKY COLOR (НОВЫЙ COLOR PICKER)
+--  SKY COLOR (НОВЫЙ HSV COLOR PICKER)
 -- ============================================================
 local skyBtn = createButton("Sky Color", yPos)
 yPos = yPos + spacing + 10
 
 -- ============================================================
---  COLOR PICKER
+--  HSV COLOR PICKER
 -- ============================================================
 local colorPickerOpen = false
 local colorPickerFrame = nil
@@ -655,12 +658,13 @@ local function createColorPicker()
     colorPickerOpen = true
     
     colorPickerFrame = Instance.new("Frame")
-    colorPickerFrame.Size = UDim2.new(0, 320, 0, 380)
-    colorPickerFrame.Position = UDim2.new(0.5, -160, 0.5, -190)
+    colorPickerFrame.Size = UDim2.new(0, 320, 0, 400)
+    colorPickerFrame.Position = UDim2.new(0.5, -160, 0.5, -200)
     colorPickerFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
     colorPickerFrame.BackgroundTransparency = 0
     colorPickerFrame.BorderSizePixel = 0
     colorPickerFrame.ZIndex = 1000
+    colorPickerFrame.Visible = frame.Visible
     colorPickerFrame.Parent = gui
     
     local pickerCorners = Instance.new("UICorner")
@@ -724,7 +728,7 @@ local function createColorPicker()
     -- ПРЕДПРОСМОТР ЦВЕТА
     local previewFrame = Instance.new("Frame")
     previewFrame.Size = UDim2.new(0, 40, 0, 40)
-    previewFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
+    previewFrame.Position = UDim2.new(0.05, 0, 0.18, 0)
     previewFrame.BackgroundColor3 = selectedColor
     previewFrame.BackgroundTransparency = 0
     previewFrame.BorderSizePixel = 0
@@ -742,11 +746,36 @@ local function createColorPicker()
     previewStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     previewStroke.Parent = previewFrame
     
-    -- HSV КВАДРАТ
-    local svSize = 200
+    -- HSV КРУГ (Hue)
+    local hueCircle = Instance.new("ImageLabel")
+    hueCircle.Size = UDim2.new(0, 180, 0, 180)
+    hueCircle.Position = UDim2.new(0.5, -90, 0.15, 0)
+    hueCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    hueCircle.BackgroundTransparency = 1
+    hueCircle.Image = "rbxassetid://329014643"
+    hueCircle.ZIndex = 1001
+    hueCircle.Parent = colorPickerFrame
+    
+    -- КРУЖОК ДЛЯ ВЫБОРА ЦВЕТА НА КРУГЕ
+    local hueKnob = Instance.new("Frame")
+    hueKnob.Size = UDim2.new(0, 14, 0, 14)
+    hueKnob.Position = UDim2.new(0.5, -7, 0.15, 10)
+    hueKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    hueKnob.BackgroundTransparency = 0
+    hueKnob.BorderSizePixel = 2
+    hueKnob.BorderColor3 = Color3.fromRGB(200, 50, 50)
+    hueKnob.ZIndex = 1002
+    hueKnob.Parent = colorPickerFrame
+    
+    local hueKnobCorners = Instance.new("UICorner")
+    hueKnobCorners.CornerRadius = UDim.new(1, 0)
+    hueKnobCorners.Parent = hueKnob
+    
+    -- HSV КВАДРАТ (Saturation + Value)
+    local svSize = 160
     local svContainer = Instance.new("Frame")
     svContainer.Size = UDim2.new(0, svSize, 0, svSize)
-    svContainer.Position = UDim2.new(0.12, 0, 0.2, 0)
+    svContainer.Position = UDim2.new(0.5, -svSize/2, 0.42, 0)
     svContainer.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     svContainer.BackgroundTransparency = 0
     svContainer.BorderSizePixel = 0
@@ -758,7 +787,7 @@ local function createColorPicker()
     svCorners.CornerRadius = UDim.new(0, 8)
     svCorners.Parent = svContainer
     
-    -- ГРАДИЕНТЫ
+    -- ГРАДИЕНТЫ ДЛЯ КВАДРАТА
     local satGrad = Instance.new("UIGradient")
     satGrad.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
@@ -775,52 +804,10 @@ local function createColorPicker()
     valGrad.Rotation = 0
     valGrad.Parent = svContainer
     
-    -- ПОЛЗУНОК ОТТЕНКА
-    local hueSlider = Instance.new("Frame")
-    hueSlider.Size = UDim2.new(0, 20, 0, svSize)
-    hueSlider.Position = UDim2.new(0.85, 0, 0.2, 0)
-    hueSlider.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    hueSlider.BackgroundTransparency = 0
-    hueSlider.BorderSizePixel = 0
-    hueSlider.ZIndex = 1001
-    hueSlider.Parent = colorPickerFrame
-    
-    local hueCorners = Instance.new("UICorner")
-    hueCorners.CornerRadius = UDim.new(0, 4)
-    hueCorners.Parent = hueSlider
-    
-    local hueGrad = Instance.new("UIGradient")
-    hueGrad.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
-        ColorSequenceKeypoint.new(0.166, Color3.fromRGB(255, 255, 0)),
-        ColorSequenceKeypoint.new(0.333, Color3.fromRGB(0, 255, 0)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
-        ColorSequenceKeypoint.new(0.666, Color3.fromRGB(0, 0, 255)),
-        ColorSequenceKeypoint.new(0.833, Color3.fromRGB(255, 0, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
-    })
-    hueGrad.Rotation = 90
-    hueGrad.Parent = hueSlider
-    
-    -- КРУЖОК НА ПОЛЗУНКЕ
-    local hueKnob = Instance.new("Frame")
-    hueKnob.Size = UDim2.new(0, 18, 0, 18)
-    hueKnob.Position = UDim2.new(0.05, 0, 0, -9)
-    hueKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    hueKnob.BackgroundTransparency = 0
-    hueKnob.BorderSizePixel = 2
-    hueKnob.BorderColor3 = Color3.fromRGB(200, 50, 50)
-    hueKnob.ZIndex = 1002
-    hueKnob.Parent = hueSlider
-    
-    local hueKnobCorners = Instance.new("UICorner")
-    hueKnobCorners.CornerRadius = UDim.new(1, 0)
-    hueKnobCorners.Parent = hueKnob
-    
-    -- КРУЖОК НА HSV КВАДРАТЕ
+    -- КРУЖОК НА КВАДРАТЕ
     local svKnob = Instance.new("Frame")
     svKnob.Size = UDim2.new(0, 12, 0, 12)
-    svKnob.Position = UDim2.new(0, -6, 0, -6)
+    svKnob.Position = UDim2.new(0.5, -6, 0.5, -6)
     svKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     svKnob.BackgroundTransparency = 0
     svKnob.BorderSizePixel = 2
@@ -843,61 +830,81 @@ local function createColorPicker()
         lighting.Ambient = color
         lighting.OutdoorAmbient = color
         lighting.FogColor = color
+        lighting.FogEnd = 500
         
-        hueKnob.Position = UDim2.new(0.05, 0, pickerHue, -9)
-        svKnob.Position = UDim2.new(pickerSat, -6, 1 - pickerVal, -6)
+        -- Обновляем позицию кружка на круге
+        local angle = pickerHue * 2 * math.pi
+        local radius = 80
+        local centerX = 0.5 * gui.AbsoluteSize.X
+        local centerY = 0.5 * gui.AbsoluteSize.Y - 200 + 0.15 * 400
+        local x = centerX + radius * math.cos(angle - math.pi/2)
+        local y = centerY + radius * math.sin(angle - math.pi/2)
+        hueKnob.Position = UDim2.new(0, x - 7 - colorPickerFrame.AbsolutePosition.X, 0, y - 7 - colorPickerFrame.AbsolutePosition.Y)
     end
     
-    -- ДРАГ HSV КВАДРАТА
+    -- ОБРАБОТЧИК ДЛЯ КРУГА (Hue)
+    local function handleHueClick(input)
+        local pos = input.Position
+        local framePos = colorPickerFrame.AbsolutePosition
+        local centerX = framePos.X + 320/2
+        local centerY = framePos.Y + 400 * 0.15 + 90
+        local dx = pos.X - centerX
+        local dy = pos.Y - centerY
+        local dist = math.sqrt(dx*dx + dy*dy)
+        if dist > 10 and dist < 100 then
+            local angle = math.atan2(dy, dx) + math.pi/2
+            if angle < 0 then angle = angle + 2 * math.pi end
+            pickerHue = angle / (2 * math.pi)
+            updateColor()
+        end
+    end
+    
+    hueCircle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            handleHueClick(input)
+        end
+    end)
+    
+    hueCircle.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement and input.UserInputState == Enum.UserInputState.Change then
+            handleHueClick(input)
+        end
+    end)
+    
+    -- ОБРАБОТЧИК ДЛЯ КВАДРАТА (Saturation + Value)
+    local function handleSVClick(input)
+        local pos = input.Position
+        local framePos = svContainer.AbsolutePosition
+        local relX = math.clamp((pos.X - framePos.X) / svContainer.AbsoluteSize.X, 0, 1)
+        local relY = math.clamp((pos.Y - framePos.Y) / svContainer.AbsoluteSize.Y, 0, 1)
+        pickerSat = relX
+        pickerVal = 1 - relY
+        svKnob.Position = UDim2.new(pickerSat, -6, 1 - pickerVal, -6)
+        updateColor()
+    end
+    
     svContainer.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isDraggingSV = true
-            local relX = math.clamp((input.Position.X - svContainer.AbsolutePosition.X) / svContainer.AbsoluteSize.X, 0, 1)
-            local relY = math.clamp((input.Position.Y - svContainer.AbsolutePosition.Y) / svContainer.AbsoluteSize.Y, 0, 1)
-            pickerSat = relX
-            pickerVal = 1 - relY
-            updateColor()
+            handleSVClick(input)
         end
     end)
     
     svContainer.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement and isDraggingSV then
-            local relX = math.clamp((input.Position.X - svContainer.AbsolutePosition.X) / svContainer.AbsoluteSize.X, 0, 1)
-            local relY = math.clamp((input.Position.Y - svContainer.AbsolutePosition.Y) / svContainer.AbsoluteSize.Y, 0, 1)
-            pickerSat = relX
-            pickerVal = 1 - relY
-            updateColor()
+        if input.UserInputType == Enum.UserInputType.MouseMovement and input.UserInputState == Enum.UserInputState.Change then
+            handleSVClick(input)
         end
     end)
     
-    -- ДРАГ ПОЛЗУНКА ОТТЕНКА
-    hueSlider.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isDraggingHue = true
-            local relY = math.clamp((input.Position.Y - hueSlider.AbsolutePosition.Y) / hueSlider.AbsoluteSize.Y, 0, 1)
-            pickerHue = relY
-            updateColor()
-        end
-    end)
-    
-    hueSlider.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement and isDraggingHue then
-            local relY = math.clamp((input.Position.Y - hueSlider.AbsolutePosition.Y) / hueSlider.AbsoluteSize.Y, 0, 1)
-            pickerHue = relY
-            updateColor()
-        end
-    end)
-    
-    -- ОТПУСКАНИЕ
-    game:GetService("UserInputService").InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isDraggingSV = false
-            isDraggingHue = false
-        end
-    end)
-    
+    -- ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ
     updateColor()
 end
+
+-- ОТСЛЕЖИВАЕМ СКРЫТИЕ МЕНЮ
+frame:GetPropertyChangedSignal("Visible"):Connect(function()
+    if colorPickerFrame then
+        colorPickerFrame.Visible = frame.Visible
+    end
+end)
 
 -- КНОПКА SKY COLOR (ОТКРЫВАЕТ PICKER)
 skyBtn.MouseButton1Click:Connect(function()
@@ -936,7 +943,7 @@ game.Players.PlayerRemoving:Connect(function()
 end)
 
 -- ============================================================
---  ОБНОВЛЕНИЕ DISTANCE В РЕАЛЬНОМ ВРЕМЕНИ
+--  ОБНОВЛЕНИЕ DISTANCE
 -- ============================================================
 game:GetService("RunService").RenderStepped:Connect(function()
     if not distEnabled then return end
@@ -1003,5 +1010,4 @@ watermark.Parent = frame
 
 print("✅ Letunium Hub загружен успешно!")
 print("🔑 Нажми на панель Letunium Opening чтобы открыть/закрыть")
-print("🎨 VISUALS: ESP, 3D Box, Distance, Line Player, Sky Color")
-print("🎨 Sky Color - полноценный Color Picker")
+print("🎨 Sky Color - полноценный HSV Color Picker")
