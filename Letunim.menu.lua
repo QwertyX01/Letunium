@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (HSV COLOR PICKER)
+--  LETUNIUM HUB (3D BOX + SKELETON)
 --  by Tormentor412
 -- ============================================================
 
@@ -121,10 +121,6 @@ infoStatus.Parent = infoPanel
 
 infoPanel.MouseButton1Click:Connect(function()
     frame.Visible = not frame.Visible
-    -- Если меню скрыто, скрываем и Color Picker
-    if not frame.Visible and colorPickerFrame then
-        colorPickerFrame.Visible = false
-    end
 end)
 
 -- ============================================================
@@ -331,12 +327,14 @@ local spacing = 42
 local espEnabled = false
 local boxEnabled = false
 local distEnabled = false
-local lineEnabled = false
+local skeletonEnabled = false
 local espObjects = {}
 local boxObjects = {}
 local distLabels = {}
-local lineObjects = {}
+local skeletonObjects = {}
 local deathConnections = {}
+local boxColor = Color3.fromRGB(255, 0, 0)
+local skeletonColor = Color3.fromRGB(0, 255, 0)
 
 local hasDrawing = pcall(function() return Drawing end) and Drawing ~= nil
 
@@ -361,16 +359,12 @@ local function clearDist()
     distLabels = {}
 end
 
-local function clearLines()
-    for _, obj in pairs(lineObjects) do
-        if type(obj) == "table" then
-            if obj.line then pcall(function() obj.line:Destroy() end) end
-            if obj.conn then pcall(function() obj.conn:Disconnect() end) end
-        else
-            pcall(function() obj:Destroy() end)
-        end
+local function clearSkeleton()
+    for _, data in pairs(skeletonObjects) do
+        if data.lines then for _, l in pairs(data.lines) do pcall(function() l:Destroy() end) end end
+        if data.conn then pcall(function() data.conn:Disconnect() end) end
     end
-    lineObjects = {}
+    skeletonObjects = {}
 end
 
 -- ============================================================
@@ -441,21 +435,23 @@ game.Players.PlayerRemoving:Connect(function()
 end)
 
 -- ============================================================
---  3D BOX
+--  3D BOX (ВОКРУГ ПРОТИВНИКА)
 -- ============================================================
 local function create3DBox(character)
     if not hasDrawing then return {lines = {}, conn = nil} end
     
     local lines = {}
+    -- Размеры для обычного человека
+    local w, h, d = 2.5, 4.5, 1.5
     local corners = {
-        Vector3.new(-2, -3, -2), Vector3.new(2, -3, -2), Vector3.new(2, -3, 2), Vector3.new(-2, -3, 2),
-        Vector3.new(-2, 3, -2), Vector3.new(2, 3, -2), Vector3.new(2, 3, 2), Vector3.new(-2, 3, 2)
+        Vector3.new(-w, -h, -d), Vector3.new(w, -h, -d), Vector3.new(w, -h, d), Vector3.new(-w, -h, d),
+        Vector3.new(-w, h, -d), Vector3.new(w, h, -d), Vector3.new(w, h, d), Vector3.new(-w, h, d)
     }
     local edges = {{1,2},{2,3},{3,4},{4,1},{5,6},{6,7},{7,8},{8,5},{1,5},{2,6},{3,7},{4,8}}
     
     for _ = 1, #edges do
         local line = Drawing.new("Line")
-        line.Color = Color3.fromRGB(255, 0, 0)
+        line.Color = boxColor
         line.Thickness = 2
         line.Transparency = 1
         table.insert(lines, line)
@@ -478,7 +474,7 @@ local function create3DBox(character)
             if screenCorners[edge[1]].on and screenCorners[edge[2]].on then
                 lines[i].From = Vector2.new(screenCorners[edge[1]].pos.X, screenCorners[edge[1]].pos.Y)
                 lines[i].To = Vector2.new(screenCorners[edge[2]].pos.X, screenCorners[edge[2]].pos.Y)
-                lines[i].Transparency = 0.8
+                lines[i].Transparency = 0.5
             else
                 lines[i].Transparency = 1
             end
@@ -495,8 +491,114 @@ local function updateBoxes()
         return 
     end
     for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= player and p.Character then
+        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
             table.insert(boxObjects, create3DBox(p.Character))
+        end
+    end
+end
+
+-- ============================================================
+--  SKELETON
+-- ============================================================
+local function createSkeleton(character)
+    if not hasDrawing then return {lines = {}, conn = nil} end
+    
+    local lines = {}
+    local joints = {
+        -- Голова
+        {part = "Head", offset = Vector3.new(0, 0, 0)},
+        -- Шея (между головой и торсом)
+        {part = "UpperTorso", offset = Vector3.new(0, 1.5, 0)},
+        -- Плечи
+        {part = "UpperTorso", offset = Vector3.new(1.5, 0.5, 0)},
+        {part = "UpperTorso", offset = Vector3.new(-1.5, 0.5, 0)},
+        -- Руки
+        {part = "RightUpperArm", offset = Vector3.new(0, 0, 0)},
+        {part = "RightLowerArm", offset = Vector3.new(0, 0, 0)},
+        {part = "LeftUpperArm", offset = Vector3.new(0, 0, 0)},
+        {part = "LeftLowerArm", offset = Vector3.new(0, 0, 0)},
+        -- Таз
+        {part = "UpperTorso", offset = Vector3.new(0, -2, 0)},
+        -- Ноги
+        {part = "RightUpperLeg", offset = Vector3.new(0, 0, 0)},
+        {part = "RightLowerLeg", offset = Vector3.new(0, 0, 0)},
+        {part = "LeftUpperLeg", offset = Vector3.new(0, 0, 0)},
+        {part = "LeftLowerLeg", offset = Vector3.new(0, 0, 0)}
+    }
+    
+    local connections = {
+        {1, 2}, {2, 3}, {2, 4}, {3, 5}, {5, 6}, {4, 7}, {7, 8},
+        {2, 9}, {9, 10}, {10, 11}, {9, 12}, {12, 13}
+    }
+    
+    for _ = 1, #connections do
+        local line = Drawing.new("Line")
+        line.Color = skeletonColor
+        line.Thickness = 2
+        line.Transparency = 1
+        table.insert(lines, line)
+    end
+    
+    local function getPartPosition(char, partName, offset)
+        local part = char:FindFirstChild(partName)
+        if part then
+            return part.Position + offset
+        end
+        return nil
+    end
+    
+    local conn = game:GetService("RunService").RenderStepped:Connect(function()
+        if not character then
+            for _, line in pairs(lines) do line.Transparency = 1 end
+            return
+        end
+        
+        local positions = {}
+        for _, joint in pairs(joints) do
+            local pos = getPartPosition(character, joint.part, joint.offset)
+            table.insert(positions, pos)
+        end
+        
+        local cam = workspace.CurrentCamera
+        local screenPositions = {}
+        for _, pos in pairs(positions) do
+            if pos then
+                local sp, onScreen = cam:WorldToScreenPoint(pos)
+                if onScreen then
+                    table.insert(screenPositions, Vector2.new(sp.X, sp.Y))
+                else
+                    table.insert(screenPositions, nil)
+                end
+            else
+                table.insert(screenPositions, nil)
+            end
+        end
+        
+        for i, conn in pairs(connections) do
+            local p1 = screenPositions[conn[1]]
+            local p2 = screenPositions[conn[2]]
+            if p1 and p2 then
+                lines[i].From = p1
+                lines[i].To = p2
+                lines[i].Transparency = 0.7
+            else
+                lines[i].Transparency = 1
+            end
+        end
+    end)
+    return {lines = lines, conn = conn}
+end
+
+local function updateSkeleton()
+    clearSkeleton()
+    if not skeletonEnabled then return end
+    if not hasDrawing then 
+        print("⚠️ Drawing API недоступна, Skeleton не работает")
+        return 
+    end
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player and p.Character then
+            table.insert(skeletonObjects, createSkeleton(p.Character))
         end
     end
 end
@@ -531,50 +633,6 @@ local function updateDist()
 end
 
 -- ============================================================
---  LINE PLAYER
--- ============================================================
-local function updateLines()
-    clearLines()
-    if not lineEnabled then return end
-    if not hasDrawing then 
-        print("⚠️ Drawing API недоступна, Line Player не работает")
-        return 
-    end
-    
-    local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-    if not root then return end
-    
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            local line = Drawing.new("Line")
-            line.Color = Color3.fromRGB(255, 0, 0)
-            line.Thickness = 2
-            line.Transparency = 1
-            
-            local conn = game:GetService("RunService").RenderStepped:Connect(function()
-                if not root or not root.Parent then return end
-                if not p.Character or not p.Character:FindFirstChild("HumanoidRootPart") then
-                    line.Transparency = 1
-                    return
-                end
-                local cam = workspace.CurrentCamera
-                local sp1, on1 = cam:WorldToScreenPoint(root.Position)
-                local sp2, on2 = cam:WorldToScreenPoint(p.Character.HumanoidRootPart.Position)
-                if on1 and on2 then
-                    line.From = Vector2.new(sp1.X, sp1.Y)
-                    line.To = Vector2.new(sp2.X, sp2.Y)
-                    line.Transparency = 0.7
-                else
-                    line.Transparency = 1
-                end
-            end)
-            
-            table.insert(lineObjects, {line = line, conn = conn})
-        end
-    end
-end
-
--- ============================================================
 --  ФУНКЦИЯ СОЗДАНИЯ КНОПКИ
 -- ============================================================
 local function createButton(text, y)
@@ -595,6 +653,42 @@ local function createButton(text, y)
     return btn
 end
 
+local function createColorButton(text, y, defaultColor)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(0, 220, 0, 38)
+    container.Position = UDim2.new(0, 0, 0, y)
+    container.BackgroundTransparency = 1
+    container.Parent = scrollFrame
+    
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 160, 0, 38)
+    btn.Position = UDim2.new(0, 0, 0, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+    btn.BackgroundTransparency = 0.3
+    btn.Text = "☐ " .. text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 16
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.Parent = container
+    local corners = Instance.new("UICorner")
+    corners.CornerRadius = UDim.new(0, 8)
+    corners.Parent = btn
+    
+    local colorPicker = Instance.new("TextButton")
+    colorPicker.Size = UDim2.new(0, 50, 0, 38)
+    colorPicker.Position = UDim2.new(0.78, 0, 0, 0)
+    colorPicker.BackgroundColor3 = defaultColor
+    colorPicker.BackgroundTransparency = 0
+    colorPicker.Text = ""
+    colorPicker.Parent = container
+    local colorCorners = Instance.new("UICorner")
+    colorCorners.CornerRadius = UDim.new(0, 8)
+    colorCorners.Parent = colorPicker
+    
+    return btn, colorPicker
+end
+
 -- ============================================================
 --  КНОПКИ VISUALS
 -- ============================================================
@@ -609,11 +703,16 @@ end)
 yPos = yPos + spacing
 
 -- 3D BOX
-local boxBtn = createButton("3D Box", yPos)
+local boxBtn, boxColorBtn = createColorButton("3D Box", yPos, boxColor)
 boxBtn.MouseButton1Click:Connect(function()
     boxEnabled = not boxEnabled
     boxBtn.Text = boxEnabled and "☑ 3D Box" or "☐ 3D Box"
     updateBoxes()
+end)
+boxColorBtn.MouseButton1Click:Connect(function()
+    boxColor = Color3.fromRGB(math.random(0, 255), math.random(0, 255), math.random(0, 255))
+    boxColorBtn.BackgroundColor3 = boxColor
+    if boxEnabled then updateBoxes() end
 end)
 yPos = yPos + spacing
 
@@ -626,298 +725,19 @@ distBtn.MouseButton1Click:Connect(function()
 end)
 yPos = yPos + spacing
 
--- LINE PLAYER
-local lineBtn = createButton("Line Player", yPos)
-lineBtn.MouseButton1Click:Connect(function()
-    lineEnabled = not lineEnabled
-    lineBtn.Text = lineEnabled and "☑ Line Player" or "☐ Line Player"
-    updateLines()
+-- SKELETON
+local skeletonBtn, skeletonColorBtn = createColorButton("Skeleton", yPos, skeletonColor)
+skeletonBtn.MouseButton1Click:Connect(function()
+    skeletonEnabled = not skeletonEnabled
+    skeletonBtn.Text = skeletonEnabled and "☑ Skeleton" or "☐ Skeleton"
+    updateSkeleton()
 end)
-yPos = yPos + spacing + 10
-
--- ============================================================
---  SKY COLOR (НОВЫЙ HSV COLOR PICKER)
--- ============================================================
-local skyBtn = createButton("Sky Color", yPos)
-yPos = yPos + spacing + 10
-
--- ============================================================
---  HSV COLOR PICKER
--- ============================================================
-local colorPickerOpen = false
-local colorPickerFrame = nil
-local selectedColor = Color3.fromRGB(200, 200, 200)
-local pickerHue = 0
-local pickerSat = 1
-local pickerVal = 1
-local isDraggingHue = false
-local isDraggingSV = false
-
-local function createColorPicker()
-    if colorPickerFrame then return end
-    colorPickerOpen = true
-    
-    colorPickerFrame = Instance.new("Frame")
-    colorPickerFrame.Size = UDim2.new(0, 320, 0, 400)
-    colorPickerFrame.Position = UDim2.new(0.5, -160, 0.5, -200)
-    colorPickerFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
-    colorPickerFrame.BackgroundTransparency = 0
-    colorPickerFrame.BorderSizePixel = 0
-    colorPickerFrame.ZIndex = 1000
-    colorPickerFrame.Visible = frame.Visible
-    colorPickerFrame.Parent = gui
-    
-    local pickerCorners = Instance.new("UICorner")
-    pickerCorners.CornerRadius = UDim.new(0, 16)
-    pickerCorners.Parent = colorPickerFrame
-    
-    local pickerStroke = Instance.new("UIStroke")
-    pickerStroke.Thickness = 2
-    pickerStroke.Color = Color3.fromRGB(200, 50, 50)
-    pickerStroke.Transparency = 0.3
-    pickerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    pickerStroke.Parent = colorPickerFrame
-    
-    -- ЗАГОЛОВОК
-    local headerPicker = Instance.new("Frame")
-    headerPicker.Size = UDim2.new(1, 0, 0, 40)
-    headerPicker.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-    headerPicker.BackgroundTransparency = 0
-    headerPicker.BorderSizePixel = 0
-    headerPicker.Parent = colorPickerFrame
-    
-    local headerCorners = Instance.new("UICorner")
-    headerCorners.CornerRadius = UDim.new(0, 16)
-    headerCorners.Parent = headerPicker
-    
-    local headerTitle = Instance.new("TextLabel")
-    headerTitle.Size = UDim2.new(0.8, 0, 1, 0)
-    headerTitle.Position = UDim2.new(0.05, 0, 0, 0)
-    headerTitle.BackgroundTransparency = 1
-    headerTitle.Text = "🎨 Sky Color"
-    headerTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    headerTitle.TextSize = 18
-    headerTitle.Font = Enum.Font.GothamBold
-    headerTitle.TextXAlignment = Enum.TextXAlignment.Left
-    headerTitle.Parent = headerPicker
-    
-    -- КНОПКА ЗАКРЫТИЯ
-    local closePickerBtn = Instance.new("TextButton")
-    closePickerBtn.Size = UDim2.new(0, 30, 0, 30)
-    closePickerBtn.Position = UDim2.new(0.93, 0, 0.5, -15)
-    closePickerBtn.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
-    closePickerBtn.BackgroundTransparency = 0.1
-    closePickerBtn.Text = "✕"
-    closePickerBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closePickerBtn.TextSize = 16
-    closePickerBtn.Font = Enum.Font.SourceSansBold
-    closePickerBtn.Parent = headerPicker
-    
-    local closeCorners = Instance.new("UICorner")
-    closeCorners.CornerRadius = UDim.new(0, 6)
-    closeCorners.Parent = closePickerBtn
-    
-    closePickerBtn.MouseButton1Click:Connect(function()
-        if colorPickerFrame then
-            colorPickerFrame:Destroy()
-            colorPickerFrame = nil
-            colorPickerOpen = false
-        end
-    end)
-    
-    -- ПРЕДПРОСМОТР ЦВЕТА
-    local previewFrame = Instance.new("Frame")
-    previewFrame.Size = UDim2.new(0, 40, 0, 40)
-    previewFrame.Position = UDim2.new(0.05, 0, 0.18, 0)
-    previewFrame.BackgroundColor3 = selectedColor
-    previewFrame.BackgroundTransparency = 0
-    previewFrame.BorderSizePixel = 0
-    previewFrame.ZIndex = 1001
-    previewFrame.Parent = colorPickerFrame
-    
-    local previewCorners = Instance.new("UICorner")
-    previewCorners.CornerRadius = UDim.new(0, 8)
-    previewCorners.Parent = previewFrame
-    
-    local previewStroke = Instance.new("UIStroke")
-    previewStroke.Thickness = 2
-    previewStroke.Color = Color3.fromRGB(255, 255, 255)
-    previewStroke.Transparency = 0.3
-    previewStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    previewStroke.Parent = previewFrame
-    
-    -- HSV КРУГ (Hue)
-    local hueCircle = Instance.new("ImageLabel")
-    hueCircle.Size = UDim2.new(0, 180, 0, 180)
-    hueCircle.Position = UDim2.new(0.5, -90, 0.15, 0)
-    hueCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    hueCircle.BackgroundTransparency = 1
-    hueCircle.Image = "rbxassetid://329014643"
-    hueCircle.ZIndex = 1001
-    hueCircle.Parent = colorPickerFrame
-    
-    -- КРУЖОК ДЛЯ ВЫБОРА ЦВЕТА НА КРУГЕ
-    local hueKnob = Instance.new("Frame")
-    hueKnob.Size = UDim2.new(0, 14, 0, 14)
-    hueKnob.Position = UDim2.new(0.5, -7, 0.15, 10)
-    hueKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    hueKnob.BackgroundTransparency = 0
-    hueKnob.BorderSizePixel = 2
-    hueKnob.BorderColor3 = Color3.fromRGB(200, 50, 50)
-    hueKnob.ZIndex = 1002
-    hueKnob.Parent = colorPickerFrame
-    
-    local hueKnobCorners = Instance.new("UICorner")
-    hueKnobCorners.CornerRadius = UDim.new(1, 0)
-    hueKnobCorners.Parent = hueKnob
-    
-    -- HSV КВАДРАТ (Saturation + Value)
-    local svSize = 160
-    local svContainer = Instance.new("Frame")
-    svContainer.Size = UDim2.new(0, svSize, 0, svSize)
-    svContainer.Position = UDim2.new(0.5, -svSize/2, 0.42, 0)
-    svContainer.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    svContainer.BackgroundTransparency = 0
-    svContainer.BorderSizePixel = 0
-    svContainer.ClipsDescendants = true
-    svContainer.ZIndex = 1001
-    svContainer.Parent = colorPickerFrame
-    
-    local svCorners = Instance.new("UICorner")
-    svCorners.CornerRadius = UDim.new(0, 8)
-    svCorners.Parent = svContainer
-    
-    -- ГРАДИЕНТЫ ДЛЯ КВАДРАТА
-    local satGrad = Instance.new("UIGradient")
-    satGrad.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
-    })
-    satGrad.Rotation = 90
-    satGrad.Parent = svContainer
-    
-    local valGrad = Instance.new("UIGradient")
-    valGrad.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
-    })
-    valGrad.Rotation = 0
-    valGrad.Parent = svContainer
-    
-    -- КРУЖОК НА КВАДРАТЕ
-    local svKnob = Instance.new("Frame")
-    svKnob.Size = UDim2.new(0, 12, 0, 12)
-    svKnob.Position = UDim2.new(0.5, -6, 0.5, -6)
-    svKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    svKnob.BackgroundTransparency = 0
-    svKnob.BorderSizePixel = 2
-    svKnob.BorderColor3 = Color3.fromRGB(200, 50, 50)
-    svKnob.ZIndex = 1002
-    svKnob.Parent = svContainer
-    
-    local svKnobCorners = Instance.new("UICorner")
-    svKnobCorners.CornerRadius = UDim.new(1, 0)
-    svKnobCorners.Parent = svKnob
-    
-    -- ФУНКЦИЯ ОБНОВЛЕНИЯ ЦВЕТА
-    local function updateColor()
-        local color = Color3.fromHSV(pickerHue, pickerSat, pickerVal)
-        selectedColor = color
-        previewFrame.BackgroundColor3 = color
-        svContainer.BackgroundColor3 = Color3.fromHSV(pickerHue, 1, 1)
-        
-        local lighting = game:GetService("Lighting")
-        lighting.Ambient = color
-        lighting.OutdoorAmbient = color
-        lighting.FogColor = color
-        lighting.FogEnd = 500
-        
-        -- Обновляем позицию кружка на круге
-        local angle = pickerHue * 2 * math.pi
-        local radius = 80
-        local centerX = 0.5 * gui.AbsoluteSize.X
-        local centerY = 0.5 * gui.AbsoluteSize.Y - 200 + 0.15 * 400
-        local x = centerX + radius * math.cos(angle - math.pi/2)
-        local y = centerY + radius * math.sin(angle - math.pi/2)
-        hueKnob.Position = UDim2.new(0, x - 7 - colorPickerFrame.AbsolutePosition.X, 0, y - 7 - colorPickerFrame.AbsolutePosition.Y)
-    end
-    
-    -- ОБРАБОТЧИК ДЛЯ КРУГА (Hue)
-    local function handleHueClick(input)
-        local pos = input.Position
-        local framePos = colorPickerFrame.AbsolutePosition
-        local centerX = framePos.X + 320/2
-        local centerY = framePos.Y + 400 * 0.15 + 90
-        local dx = pos.X - centerX
-        local dy = pos.Y - centerY
-        local dist = math.sqrt(dx*dx + dy*dy)
-        if dist > 10 and dist < 100 then
-            local angle = math.atan2(dy, dx) + math.pi/2
-            if angle < 0 then angle = angle + 2 * math.pi end
-            pickerHue = angle / (2 * math.pi)
-            updateColor()
-        end
-    end
-    
-    hueCircle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            handleHueClick(input)
-        end
-    end)
-    
-    hueCircle.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement and input.UserInputState == Enum.UserInputState.Change then
-            handleHueClick(input)
-        end
-    end)
-    
-    -- ОБРАБОТЧИК ДЛЯ КВАДРАТА (Saturation + Value)
-    local function handleSVClick(input)
-        local pos = input.Position
-        local framePos = svContainer.AbsolutePosition
-        local relX = math.clamp((pos.X - framePos.X) / svContainer.AbsoluteSize.X, 0, 1)
-        local relY = math.clamp((pos.Y - framePos.Y) / svContainer.AbsoluteSize.Y, 0, 1)
-        pickerSat = relX
-        pickerVal = 1 - relY
-        svKnob.Position = UDim2.new(pickerSat, -6, 1 - pickerVal, -6)
-        updateColor()
-    end
-    
-    svContainer.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            handleSVClick(input)
-        end
-    end)
-    
-    svContainer.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement and input.UserInputState == Enum.UserInputState.Change then
-            handleSVClick(input)
-        end
-    end)
-    
-    -- ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ
-    updateColor()
-end
-
--- ОТСЛЕЖИВАЕМ СКРЫТИЕ МЕНЮ
-frame:GetPropertyChangedSignal("Visible"):Connect(function()
-    if colorPickerFrame then
-        colorPickerFrame.Visible = frame.Visible
-    end
+skeletonColorBtn.MouseButton1Click:Connect(function()
+    skeletonColor = Color3.fromRGB(math.random(0, 255), math.random(0, 255), math.random(0, 255))
+    skeletonColorBtn.BackgroundColor3 = skeletonColor
+    if skeletonEnabled then updateSkeleton() end
 end)
-
--- КНОПКА SKY COLOR (ОТКРЫВАЕТ PICKER)
-skyBtn.MouseButton1Click:Connect(function()
-    if colorPickerOpen then
-        if colorPickerFrame then
-            colorPickerFrame:Destroy()
-            colorPickerFrame = nil
-            colorPickerOpen = false
-        end
-    else
-        createColorPicker()
-    end
-end)
+yPos = yPos + spacing
 
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, yPos + 50)
 
@@ -930,7 +750,7 @@ game.Players.PlayerAdded:Connect(function(p)
         if espEnabled then updateESP() end
         if boxEnabled then updateBoxes() end
         if distEnabled then updateDist() end
-        if lineEnabled then updateLines() end
+        if skeletonEnabled then updateSkeleton() end
     end)
 end)
 
@@ -939,7 +759,7 @@ game.Players.PlayerRemoving:Connect(function()
     if espEnabled then updateESP() end
     if boxEnabled then updateBoxes() end
     if distEnabled then updateDist() end
-    if lineEnabled then updateLines() end
+    if skeletonEnabled then updateSkeleton() end
 end)
 
 -- ============================================================
@@ -1010,4 +830,5 @@ watermark.Parent = frame
 
 print("✅ Letunium Hub загружен успешно!")
 print("🔑 Нажми на панель Letunium Opening чтобы открыть/закрыть")
-print("🎨 Sky Color - полноценный HSV Color Picker")
+print("🎨 VISUALS: ESP, 3D Box, Distance, Skeleton")
+print("🎨 Цвета 3D Box и Skeleton меняются при нажатии на цветной квадрат")
