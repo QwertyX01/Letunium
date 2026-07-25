@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (ИСПРАВЛЕНО: ESP УДАЛЯЕТСЯ ПОСЛЕ СМЕРТИ)
+--  LETUNIUM HUB (С COLOR PICKER)
 --  by Tormentor412
 -- ============================================================
 
@@ -370,7 +370,7 @@ local function clearLines()
 end
 
 -- ============================================================
---  ESP (С АВТОУДАЛЕНИЕМ ПОСЛЕ СМЕРТИ)
+--  ESP
 -- ============================================================
 local function updateESP()
     clearESP()
@@ -394,7 +394,7 @@ local function updateESP()
     end
 end
 
--- ОТСЛЕЖИВАНИЕ СМЕРТИ ДЛЯ УДАЛЕНИЯ ESP
+-- ОТСЛЕЖИВАНИЕ СМЕРТИ
 local function setupDeathTracking(p)
     if p == player then return end
     p.CharacterAdded:Connect(function(char)
@@ -420,7 +420,6 @@ local function setupDeathTracking(p)
     end)
 end
 
--- ПОДПИСКА НА ИГРОКОВ
 for _, p in pairs(game.Players:GetPlayers()) do
     setupDeathTracking(p)
 end
@@ -634,63 +633,284 @@ end)
 yPos = yPos + spacing + 10
 
 -- ============================================================
---  SKY COLOR
+--  SKY COLOR (НОВЫЙ COLOR PICKER)
 -- ============================================================
-local skyLabel = Instance.new("TextLabel")
-skyLabel.Size = UDim2.new(0, 220, 0, 28)
-skyLabel.Position = UDim2.new(0, 0, 0, yPos)
-skyLabel.BackgroundTransparency = 1
-skyLabel.Text = "Sky Color"
-skyLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-skyLabel.TextSize = 16
-skyLabel.Font = Enum.Font.GothamBold
-skyLabel.TextXAlignment = Enum.TextXAlignment.Left
-skyLabel.Parent = scrollFrame
-yPos = yPos + 30
+local skyBtn = createButton("Sky Color", yPos)
+yPos = yPos + spacing + 10
 
-local skyColors = {
-    {name = "🌑", color = Color3.fromRGB(10, 10, 20)},
-    {name = "⬜", color = Color3.fromRGB(200, 200, 200)},
-    {name = "🌸", color = Color3.fromRGB(255, 150, 200)},
-    {name = "🌌", color = Color3.fromRGB(20, 30, 80)},
-    {name = "🌅", color = Color3.fromRGB(255, 150, 50)},
-    {name = "🌿", color = Color3.fromRGB(50, 150, 50)},
-    {name = "🔥", color = Color3.fromRGB(255, 100, 20)},
-    {name = "💜", color = Color3.fromRGB(150, 50, 200)},
-    {name = "🌊", color = Color3.fromRGB(50, 150, 255)}
-}
+-- ============================================================
+--  COLOR PICKER
+-- ============================================================
+local colorPickerOpen = false
+local colorPickerFrame = nil
+local selectedColor = Color3.fromRGB(200, 200, 200)
+local pickerHue = 0
+local pickerSat = 1
+local pickerVal = 1
+local isDraggingHue = false
+local isDraggingSV = false
 
-for i, data in ipairs(skyColors) do
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 55, 0, 35)
-    btn.Position = UDim2.new(0, (i-1) * 60, 0, yPos)
-    btn.BackgroundColor3 = data.color
-    btn.BackgroundTransparency = 0.1
-    btn.Text = data.name
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 14
-    btn.Font = Enum.Font.GothamBold
-    btn.Parent = scrollFrame
-    local cn = Instance.new("UICorner")
-    cn.CornerRadius = UDim.new(0, 6)
-    cn.Parent = btn
+local function createColorPicker()
+    if colorPickerFrame then return end
+    colorPickerOpen = true
     
-    btn.MouseButton1Click:Connect(function()
-        for _, child in pairs(scrollFrame:GetChildren()) do
-            if child:IsA("TextButton") and child.BackgroundColor3 == data.color then
-                child.BackgroundTransparency = 0.1
-            else
-                child.BackgroundTransparency = 0.8
-            end
+    colorPickerFrame = Instance.new("Frame")
+    colorPickerFrame.Size = UDim2.new(0, 320, 0, 380)
+    colorPickerFrame.Position = UDim2.new(0.5, -160, 0.5, -190)
+    colorPickerFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 14)
+    colorPickerFrame.BackgroundTransparency = 0
+    colorPickerFrame.BorderSizePixel = 0
+    colorPickerFrame.ZIndex = 1000
+    colorPickerFrame.Parent = gui
+    
+    local pickerCorners = Instance.new("UICorner")
+    pickerCorners.CornerRadius = UDim.new(0, 16)
+    pickerCorners.Parent = colorPickerFrame
+    
+    local pickerStroke = Instance.new("UIStroke")
+    pickerStroke.Thickness = 2
+    pickerStroke.Color = Color3.fromRGB(200, 50, 50)
+    pickerStroke.Transparency = 0.3
+    pickerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    pickerStroke.Parent = colorPickerFrame
+    
+    -- ЗАГОЛОВОК
+    local headerPicker = Instance.new("Frame")
+    headerPicker.Size = UDim2.new(1, 0, 0, 40)
+    headerPicker.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+    headerPicker.BackgroundTransparency = 0
+    headerPicker.BorderSizePixel = 0
+    headerPicker.Parent = colorPickerFrame
+    
+    local headerCorners = Instance.new("UICorner")
+    headerCorners.CornerRadius = UDim.new(0, 16)
+    headerCorners.Parent = headerPicker
+    
+    local headerTitle = Instance.new("TextLabel")
+    headerTitle.Size = UDim2.new(0.8, 0, 1, 0)
+    headerTitle.Position = UDim2.new(0.05, 0, 0, 0)
+    headerTitle.BackgroundTransparency = 1
+    headerTitle.Text = "🎨 Sky Color"
+    headerTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    headerTitle.TextSize = 18
+    headerTitle.Font = Enum.Font.GothamBold
+    headerTitle.TextXAlignment = Enum.TextXAlignment.Left
+    headerTitle.Parent = headerPicker
+    
+    -- КНОПКА ЗАКРЫТИЯ
+    local closePickerBtn = Instance.new("TextButton")
+    closePickerBtn.Size = UDim2.new(0, 30, 0, 30)
+    closePickerBtn.Position = UDim2.new(0.93, 0, 0.5, -15)
+    closePickerBtn.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
+    closePickerBtn.BackgroundTransparency = 0.1
+    closePickerBtn.Text = "✕"
+    closePickerBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closePickerBtn.TextSize = 16
+    closePickerBtn.Font = Enum.Font.SourceSansBold
+    closePickerBtn.Parent = headerPicker
+    
+    local closeCorners = Instance.new("UICorner")
+    closeCorners.CornerRadius = UDim.new(0, 6)
+    closeCorners.Parent = closePickerBtn
+    
+    closePickerBtn.MouseButton1Click:Connect(function()
+        if colorPickerFrame then
+            colorPickerFrame:Destroy()
+            colorPickerFrame = nil
+            colorPickerOpen = false
         end
-        btn.BackgroundTransparency = 0.2
-        local lighting = game:GetService("Lighting")
-        lighting.Ambient = data.color
-        lighting.OutdoorAmbient = data.color
-        lighting.FogColor = data.color
-        lighting.FogEnd = 500
     end)
+    
+    -- ПРЕДПРОСМОТР ЦВЕТА
+    local previewFrame = Instance.new("Frame")
+    previewFrame.Size = UDim2.new(0, 40, 0, 40)
+    previewFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
+    previewFrame.BackgroundColor3 = selectedColor
+    previewFrame.BackgroundTransparency = 0
+    previewFrame.BorderSizePixel = 0
+    previewFrame.ZIndex = 1001
+    previewFrame.Parent = colorPickerFrame
+    
+    local previewCorners = Instance.new("UICorner")
+    previewCorners.CornerRadius = UDim.new(0, 8)
+    previewCorners.Parent = previewFrame
+    
+    local previewStroke = Instance.new("UIStroke")
+    previewStroke.Thickness = 2
+    previewStroke.Color = Color3.fromRGB(255, 255, 255)
+    previewStroke.Transparency = 0.3
+    previewStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    previewStroke.Parent = previewFrame
+    
+    -- HSV КВАДРАТ
+    local svSize = 200
+    local svContainer = Instance.new("Frame")
+    svContainer.Size = UDim2.new(0, svSize, 0, svSize)
+    svContainer.Position = UDim2.new(0.12, 0, 0.2, 0)
+    svContainer.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    svContainer.BackgroundTransparency = 0
+    svContainer.BorderSizePixel = 0
+    svContainer.ClipsDescendants = true
+    svContainer.ZIndex = 1001
+    svContainer.Parent = colorPickerFrame
+    
+    local svCorners = Instance.new("UICorner")
+    svCorners.CornerRadius = UDim.new(0, 8)
+    svCorners.Parent = svContainer
+    
+    -- ГРАДИЕНТЫ
+    local satGrad = Instance.new("UIGradient")
+    satGrad.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
+    })
+    satGrad.Rotation = 90
+    satGrad.Parent = svContainer
+    
+    local valGrad = Instance.new("UIGradient")
+    valGrad.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+    })
+    valGrad.Rotation = 0
+    valGrad.Parent = svContainer
+    
+    -- ПОЛЗУНОК ОТТЕНКА
+    local hueSlider = Instance.new("Frame")
+    hueSlider.Size = UDim2.new(0, 20, 0, svSize)
+    hueSlider.Position = UDim2.new(0.85, 0, 0.2, 0)
+    hueSlider.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    hueSlider.BackgroundTransparency = 0
+    hueSlider.BorderSizePixel = 0
+    hueSlider.ZIndex = 1001
+    hueSlider.Parent = colorPickerFrame
+    
+    local hueCorners = Instance.new("UICorner")
+    hueCorners.CornerRadius = UDim.new(0, 4)
+    hueCorners.Parent = hueSlider
+    
+    local hueGrad = Instance.new("UIGradient")
+    hueGrad.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+        ColorSequenceKeypoint.new(0.166, Color3.fromRGB(255, 255, 0)),
+        ColorSequenceKeypoint.new(0.333, Color3.fromRGB(0, 255, 0)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
+        ColorSequenceKeypoint.new(0.666, Color3.fromRGB(0, 0, 255)),
+        ColorSequenceKeypoint.new(0.833, Color3.fromRGB(255, 0, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
+    })
+    hueGrad.Rotation = 90
+    hueGrad.Parent = hueSlider
+    
+    -- КРУЖОК НА ПОЛЗУНКЕ
+    local hueKnob = Instance.new("Frame")
+    hueKnob.Size = UDim2.new(0, 18, 0, 18)
+    hueKnob.Position = UDim2.new(0.05, 0, 0, -9)
+    hueKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    hueKnob.BackgroundTransparency = 0
+    hueKnob.BorderSizePixel = 2
+    hueKnob.BorderColor3 = Color3.fromRGB(200, 50, 50)
+    hueKnob.ZIndex = 1002
+    hueKnob.Parent = hueSlider
+    
+    local hueKnobCorners = Instance.new("UICorner")
+    hueKnobCorners.CornerRadius = UDim.new(1, 0)
+    hueKnobCorners.Parent = hueKnob
+    
+    -- КРУЖОК НА HSV КВАДРАТЕ
+    local svKnob = Instance.new("Frame")
+    svKnob.Size = UDim2.new(0, 12, 0, 12)
+    svKnob.Position = UDim2.new(0, -6, 0, -6)
+    svKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    svKnob.BackgroundTransparency = 0
+    svKnob.BorderSizePixel = 2
+    svKnob.BorderColor3 = Color3.fromRGB(200, 50, 50)
+    svKnob.ZIndex = 1002
+    svKnob.Parent = svContainer
+    
+    local svKnobCorners = Instance.new("UICorner")
+    svKnobCorners.CornerRadius = UDim.new(1, 0)
+    svKnobCorners.Parent = svKnob
+    
+    -- ФУНКЦИЯ ОБНОВЛЕНИЯ ЦВЕТА
+    local function updateColor()
+        local color = Color3.fromHSV(pickerHue, pickerSat, pickerVal)
+        selectedColor = color
+        previewFrame.BackgroundColor3 = color
+        svContainer.BackgroundColor3 = Color3.fromHSV(pickerHue, 1, 1)
+        
+        local lighting = game:GetService("Lighting")
+        lighting.Ambient = color
+        lighting.OutdoorAmbient = color
+        lighting.FogColor = color
+        
+        hueKnob.Position = UDim2.new(0.05, 0, pickerHue, -9)
+        svKnob.Position = UDim2.new(pickerSat, -6, 1 - pickerVal, -6)
+    end
+    
+    -- ДРАГ HSV КВАДРАТА
+    svContainer.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDraggingSV = true
+            local relX = math.clamp((input.Position.X - svContainer.AbsolutePosition.X) / svContainer.AbsoluteSize.X, 0, 1)
+            local relY = math.clamp((input.Position.Y - svContainer.AbsolutePosition.Y) / svContainer.AbsoluteSize.Y, 0, 1)
+            pickerSat = relX
+            pickerVal = 1 - relY
+            updateColor()
+        end
+    end)
+    
+    svContainer.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement and isDraggingSV then
+            local relX = math.clamp((input.Position.X - svContainer.AbsolutePosition.X) / svContainer.AbsoluteSize.X, 0, 1)
+            local relY = math.clamp((input.Position.Y - svContainer.AbsolutePosition.Y) / svContainer.AbsoluteSize.Y, 0, 1)
+            pickerSat = relX
+            pickerVal = 1 - relY
+            updateColor()
+        end
+    end)
+    
+    -- ДРАГ ПОЛЗУНКА ОТТЕНКА
+    hueSlider.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDraggingHue = true
+            local relY = math.clamp((input.Position.Y - hueSlider.AbsolutePosition.Y) / hueSlider.AbsoluteSize.Y, 0, 1)
+            pickerHue = relY
+            updateColor()
+        end
+    end)
+    
+    hueSlider.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement and isDraggingHue then
+            local relY = math.clamp((input.Position.Y - hueSlider.AbsolutePosition.Y) / hueSlider.AbsoluteSize.Y, 0, 1)
+            pickerHue = relY
+            updateColor()
+        end
+    end)
+    
+    -- ОТПУСКАНИЕ
+    game:GetService("UserInputService").InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDraggingSV = false
+            isDraggingHue = false
+        end
+    end)
+    
+    updateColor()
 end
+
+-- КНОПКА SKY COLOR (ОТКРЫВАЕТ PICKER)
+skyBtn.MouseButton1Click:Connect(function()
+    if colorPickerOpen then
+        if colorPickerFrame then
+            colorPickerFrame:Destroy()
+            colorPickerFrame = nil
+            colorPickerOpen = false
+        end
+    else
+        createColorPicker()
+    end
+end)
 
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, yPos + 50)
 
@@ -784,4 +1004,4 @@ watermark.Parent = frame
 print("✅ Letunium Hub загружен успешно!")
 print("🔑 Нажми на панель Letunium Opening чтобы открыть/закрыть")
 print("🎨 VISUALS: ESP, 3D Box, Distance, Line Player, Sky Color")
-print("✅ ESP автоматически удаляется после смерти игрока")
+print("🎨 Sky Color - полноценный Color Picker")
