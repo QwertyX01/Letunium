@@ -1,5 +1,5 @@
 -- ============================================================
---  LETUNIUM HUB (ИСПРАВЛЕННАЯ СИСТЕМА ESP)
+--  LETUNIUM HUB (НОВАЯ СИСТЕМА ESP)
 --  by Tormentor412
 -- ============================================================
 
@@ -343,20 +343,16 @@ local function createButton(text, y)
 end
 
 -- ============================================================
---  СИСТЕМА ESP (ИСПРАВЛЕННАЯ)
+--  НОВАЯ СИСТЕМА ESP
 -- ============================================================
 local espEnabled = false
-local espData = {}  -- { [Player] = { highlight, billboard, label, boxLines, skeletonLines, distBillboard, distLabel } }
-
+local espData = {}
 local espBoxColor = Color3.fromRGB(255, 0, 0)
 local espSkeletonColor = Color3.fromRGB(0, 255, 0)
 local hasDrawing = pcall(function() return Drawing end) and Drawing ~= nil
 local camera = workspace.CurrentCamera
 local renderStepped = game:GetService("RunService").RenderStepped
 
--- ============================================================
---  ОЧИСТКА ESP ДЛЯ ОДНОГО ИГРОКА
--- ============================================================
 local function clearPlayerESP(p)
     local data = espData[p]
     if not data then return end
@@ -383,9 +379,6 @@ local function clearPlayerESP(p)
     espData[p] = nil
 end
 
--- ============================================================
---  ОЧИСТКА ВСЕГО ESP
--- ============================================================
 local function clearAllESP()
     for p, _ in pairs(espData) do
         clearPlayerESP(p)
@@ -393,16 +386,12 @@ local function clearAllESP()
     espData = {}
 end
 
--- ============================================================
---  СОЗДАНИЕ ESP ДЛЯ ИГРОКА (ОДИН РАЗ)
--- ============================================================
 local function createPlayerESP(p)
     if p == player then return end
     if espData[p] then clearPlayerESP(p) end
     
     local data = {}
     
-    -- HIGHLIGHT
     local highlight = Instance.new("Highlight")
     highlight.FillColor = Color3.fromRGB(255, 0, 0)
     highlight.FillTransparency = 0.4
@@ -411,7 +400,6 @@ local function createPlayerESP(p)
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
     data.highlight = highlight
     
-    -- BILLBOARD (имя)
     local billboard = Instance.new("BillboardGui")
     billboard.Size = UDim2.new(0, 150, 0, 30)
     billboard.StudsOffset = Vector3.new(0, 2.5, 0)
@@ -430,7 +418,6 @@ local function createPlayerESP(p)
     label.Parent = billboard
     data.label = label
     
-    -- 3D BOX
     if hasDrawing then
         local boxLines = {}
         for i = 1, 12 do
@@ -442,7 +429,6 @@ local function createPlayerESP(p)
         end
         data.boxLines = boxLines
         
-        -- SKELETON
         local skeletonLines = {}
         for i = 1, 13 do
             local line = Drawing.new("Line")
@@ -454,7 +440,6 @@ local function createPlayerESP(p)
         data.skeletonLines = skeletonLines
     end
     
-    -- DISTANCE
     local distBillboard = Instance.new("BillboardGui")
     distBillboard.Size = UDim2.new(0, 100, 0, 25)
     distBillboard.StudsOffset = Vector3.new(0, 2, 0)
@@ -476,9 +461,6 @@ local function createPlayerESP(p)
     espData[p] = data
 end
 
--- ============================================================
---  ОБНОВЛЕНИЕ ESP (ВЫЗЫВАЕТСЯ КАЖДЫЙ КАДР)
--- ============================================================
 local function updateESP()
     local myRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
     local myPos = myRoot and myRoot.Position or Vector3.new(0, 0, 0)
@@ -489,11 +471,9 @@ local function updateESP()
         local humanoid = char and char:FindFirstChild("Humanoid")
         local head = char and char:FindFirstChild("Head")
         
-        -- ПРОВЕРКА: жив ли игрок и видим ли
         local isValid = char and hrp and humanoid and humanoid.Health > 0 and head
         
         if not isValid then
-            -- Игрок мёртв или не загружен — скрываем всё
             if data.highlight then data.highlight.Adornee = nil end
             if data.billboard then data.billboard.Adornee = nil end
             if data.distBillboard then data.distBillboard.Adornee = nil end
@@ -510,19 +490,16 @@ local function updateESP()
             goto continue
         end
         
-        -- ОБНОВЛЯЕМ HIGHLIGHT
         if data.highlight then
             data.highlight.Adornee = char
             data.highlight.Enabled = true
         end
         
-        -- ОБНОВЛЯЕМ BILLBOARD (имя)
         if data.billboard then
             data.billboard.Adornee = head
             data.billboard.Enabled = true
         end
         
-        -- ОБНОВЛЯЕМ DISTANCE
         if data.distBillboard then
             data.distBillboard.Adornee = head
             data.distBillboard.Enabled = true
@@ -532,7 +509,6 @@ local function updateESP()
             end
         end
         
-        -- ОБНОВЛЯЕМ 3D BOX
         if data.boxLines and hasDrawing then
             local w, h, d = 2.5, 4.5, 1.5
             local corners = {
@@ -559,7 +535,6 @@ local function updateESP()
             end
         end
         
-        -- ОБНОВЛЯЕМ SKELETON
         if data.skeletonLines and hasDrawing then
             local joints = {
                 {part = "Head", offset = Vector3.new(0, 0, 0)},
@@ -627,9 +602,6 @@ local function updateESP()
     end
 end
 
--- ============================================================
---  ФУНКЦИЯ ВКЛЮЧЕНИЯ/ВЫКЛЮЧЕНИЯ ESP
--- ============================================================
 local function toggleESP()
     espEnabled = not espEnabled
     
@@ -645,9 +617,6 @@ local function toggleESP()
     end
 end
 
--- ============================================================
---  ПОДПИСКА НА СОБЫТИЯ ИГРОКОВ
--- ============================================================
 game.Players.PlayerAdded:Connect(function(p)
     if p ~= player then
         p.CharacterAdded:Connect(function()
@@ -668,9 +637,6 @@ game.Players.PlayerRemoving:Connect(function(p)
     clearPlayerESP(p)
 end)
 
--- ============================================================
---  ОБНОВЛЕНИЕ КАЖДЫЙ КАДР
--- ============================================================
 renderStepped:Connect(function()
     if espEnabled then
         updateESP()
@@ -689,7 +655,7 @@ espBtn.MouseButton1Click:Connect(function()
 end)
 yPos = yPos + spacing
 
--- 3D BOX (включает/выключает отображение бокса)
+-- 3D BOX
 local boxEnabled = false
 local function toggleBox()
     boxEnabled = not boxEnabled
@@ -713,7 +679,7 @@ boxBtn.MouseButton1Click:Connect(function()
 end)
 yPos = yPos + spacing
 
--- DISTANCE (включает/выключает отображение дистанции)
+-- DISTANCE
 local distEnabled = false
 local function toggleDist()
     distEnabled = not distEnabled
@@ -731,7 +697,7 @@ distBtn.MouseButton1Click:Connect(function()
 end)
 yPos = yPos + spacing
 
--- SKELETON (включает/выключает отображение скелета)
+-- SKELETON
 local skeletonEnabled = false
 local function toggleSkeleton()
     skeletonEnabled = not skeletonEnabled
