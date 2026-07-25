@@ -434,75 +434,94 @@ end
 local function updateBoxes()
     -- Удаляем старые данные BOX
     for _, data in pairs(boxData) do
-        if data.lines then for _, l in pairs(data.lines) do pcall(function() l:Destroy() end) end end
+        if data.lines then
+            for _, l in pairs(data.lines) do pcall(function() l:Destroy() end) end
+        end
         if data.conn then pcall(function() data.conn:Disconnect() end) end
+        if data.diedConn then pcall(function() data.diedConn:Disconnect() end) end
     end
     boxData = {}
-    
+
     if not boxEnabled or not hasDrawing then return end
-    
+
     local w, h, d = 2.5, 4.5, 1.5
     local corners = {
         Vector3.new(-w, -h, -d), Vector3.new(w, -h, -d), Vector3.new(w, -h, d), Vector3.new(-w, -h, d),
-        Vector3.new(-w, h, -d), Vector3.new(w, h, -d), Vector3.new(w, h, d), Vector3.new(-w, h, d)
+        Vector3.new(-w,  h, -d), Vector3.new(w,  h, -d), Vector3.new(w,  h, d), Vector3.new(-w,  h, d)
     }
     local edges = {{1,2},{2,3},{3,4},{4,1},{5,6},{6,7},{7,8},{8,5},{1,5},{2,6},{3,7},{4,8}}
-    
+
     for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= player and p.Character then
-            local hrp = p.Character:FindFirstChild("HumanoidRootPart")
-            local humanoid = p.Character:FindFirstChild("Humanoid")
-            -- Проверка на жизнь
-            if hrp and humanoid and humanoid.Health > 0 then
-                local lines = {}
-                for _ = 1, #edges do
-                    local line = Drawing.new("Line")
-                    line.Color = boxColor
-                    line.Thickness = 2
-                    line.Transparency = 1
-                    table.insert(lines, line)
+        if p == player then continue end
+        local character = p.Character
+        if not character then continue end
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        local humanoid = character:FindFirstChild("Humanoid")
+        if not hrp or not humanoid or humanoid.Health <= 0 then continue end
+
+        local lines = {}
+        for _ = 1, #edges do
+            local line = Drawing.new("Line")
+            line.Color = boxColor
+            line.Thickness = 2
+            line.Transparency = 1
+            table.insert(lines, line)
+        end
+
+        local function cleanupBox()
+            if boxData[p] then
+                if boxData[p].lines then
+                    for _, l in pairs(boxData[p].lines) do pcall(function() l:Destroy() end) end
                 end
-                
-                local conn = renderStepped:Connect(function()
-                    -- Если персонаж удалён или мёртв – прячем
-                    if not hrp or not hrp.Parent then
-                        for _, line in pairs(lines) do line.Transparency = 1 end
-                        return
-                    end
-                    local humanoidNow = hrp.Parent:FindFirstChild("Humanoid")
-                    if not humanoidNow or humanoidNow.Health <= 0 then
-                        for _, line in pairs(lines) do line.Transparency = 1 end
-                        return
-                    end
-                    
-                    local screenCorners = {}
-                    for _, corner in pairs(corners) do
-                        local worldPos = hrp.CFrame:PointToWorldSpace(corner)
-                        local sp, onScreen = camera:WorldToViewportPoint(worldPos)
-                        table.insert(screenCorners, {
-                            pos = Vector2.new(sp.X, sp.Y),
-                            on = onScreen,
-                            z = sp.Z   -- сохраняем глубину
-                        })
-                    end
-                    
-                    for i, edge in pairs(edges) do
-                        local c1 = screenCorners[edge[1]]
-                        local c2 = screenCorners[edge[2]]
-                        -- Проверяем, что обе точки видны И находятся перед камерой
-                        if c1.on and c2.on and c1.z > 0 and c2.z > 0 then
-                            lines[i].From = c1.pos
-                            lines[i].To = c2.pos
-                            lines[i].Transparency = 0.5
-                        else
-                            lines[i].Transparency = 1
-                        end
-                    end
-                end)
-                
-                boxData[p] = {lines = lines, conn = conn}
+                if boxData[p].conn then pcall(function() boxData[p].conn:Disconnect() end) end
+                if boxData[p].diedConn then pcall(function() boxData[p].diedConn:Disconnect() end) end
+                boxData[p] = nil
             end
         end
+
+        local diedConn = humanoid.Died:Connect(cleanupBox)
+
+        local conn = renderStepped:Connect(function()
+            if not hrp or not hrp.Parent then
+                for _, line in pairs(lines) do line.Transparency = 1 end
+                return
+            end
+            local humanoidNow = hrp.Parent:FindFirstChild("Humanoid")
+            if not humanoidNow or humanoidNow.Health <= 0 then
+                for _, line in pairs(lines) do line.Transparency = 1 end
+                return
+            end
+
+            local screenCorners = {}
+            for _, corner in pairs(corners) do
+                local worldPos = hrp.CFrame:PointToWorldSpace(corner)
+                local sp, onScreen = camera:WorldToViewportPoint(worldPos)
+                table.insert(screenCorners, {
+                    pos = Vector2.new(sp.X, sp.Y),
+                    on = onScreen,
+                    z = sp.Z
+                })
+            end
+
+            for i, edge in pairs(edges) do
+                local c1 = screenCorners[edge[1]]
+                local c2 = screenCorners[edge[2]]
+                if c1.on and c2.on and c1.z > 0 and c2.z > 0 then
+                    lines[i].From = c1.pos
+                    lines[i].To = c2.pos
+                    lines[i].Transparency = 0.5
+                else
+                    lines[i].Transparency = 1
+                end
+            end
+        end)
+
+        boxData[p] = {
+            lines = lines,
+            conn = conn,
+            diedConn = diedConn,
+            cleanup = cleanupBox
+        }
     end
 end
 
@@ -516,35 +535,36 @@ local function updateDist()
         if data.label then pcall(function() data.label:Destroy() end) end
     end
     distData = {}
-    
+
     if not distEnabled then return end
-    
+
     for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= player and p.Character then
-            local head = p.Character:FindFirstChild("Head")
-            local humanoid = p.Character:FindFirstChild("Humanoid")
-            if head and humanoid and humanoid.Health > 0 then
-                local billboard = Instance.new("BillboardGui")
-                billboard.Size = UDim2.new(0, 120, 0, 25)
-                billboard.Adornee = head
-                billboard.StudsOffset = Vector3.new(0, 2, 0)
-                billboard.AlwaysOnTop = true
-                billboard.Parent = p.Character
-                
-                local label = Instance.new("TextLabel")
-                label.Size = UDim2.new(1, 0, 1, 0)
-                label.BackgroundTransparency = 1
-                label.Text = "0m"
-                label.TextColor3 = Color3.fromRGB(0, 255, 255)
-                label.TextSize = 14
-                label.Font = Enum.Font.GothamBold
-                label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-                label.TextStrokeTransparency = 0.3
-                label.Parent = billboard
-                
-                distData[p] = {billboard = billboard, label = label}
-            end
-        end
+        if p == player then continue end
+        local character = p.Character
+        if not character then continue end
+        local rootPart = character:FindFirstChild("HumanoidRootPart")  -- вместо Head
+        local humanoid = character:FindFirstChild("Humanoid")
+        if not rootPart or not humanoid or humanoid.Health <= 0 then continue end
+
+        local billboard = Instance.new("BillboardGui")
+        billboard.Size = UDim2.new(0, 120, 0, 25)
+        billboard.Adornee = rootPart
+        billboard.StudsOffset = Vector3.new(0, 3, 0)  -- поднять выше головы
+        billboard.AlwaysOnTop = true
+        billboard.Parent = character
+
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.Text = "0m"
+        label.TextColor3 = Color3.fromRGB(255, 0, 0)  -- КРАСНЫЙ
+        label.TextSize = 14
+        label.Font = Enum.Font.GothamBold
+        label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+        label.TextStrokeTransparency = 0.3
+        label.Parent = billboard
+
+        distData[p] = {billboard = billboard, label = label}
     end
 end
 
@@ -552,15 +572,18 @@ end
 --  SKELETON (ИСПРАВЛЕННАЯ ВЕРСИЯ)
 -- ============================================================
 local function updateSkeleton()
-    -- Удаляем старые данные SKELETON
+    -- Удаляем старые данные
     for _, data in pairs(skeletonData) do
-        if data.lines then for _, l in pairs(data.lines) do pcall(function() l:Destroy() end) end end
+        if data.lines then
+            for _, l in pairs(data.lines) do pcall(function() l:Destroy() end) end
+        end
         if data.conn then pcall(function() data.conn:Disconnect() end) end
+        if data.diedConn then pcall(function() data.diedConn:Disconnect() end) end
     end
     skeletonData = {}
-    
+
     if not skeletonEnabled or not hasDrawing then return end
-    
+
     local joints = {
         {part = "Head", offset = Vector3.new(0, 0, 0)},
         {part = "UpperTorso", offset = Vector3.new(0, 0, 0)},
@@ -577,12 +600,12 @@ local function updateSkeleton()
         {part = "LeftUpperLeg", offset = Vector3.new(0, 0, 0)},
         {part = "LeftLowerLeg", offset = Vector3.new(0, 0, 0)}
     }
-    
+
     local connections = {
         {1, 2}, {2, 3}, {3, 4}, {3, 5}, {4, 6}, {6, 7}, {5, 8}, {8, 9},
         {3, 10}, {10, 11}, {11, 12}, {10, 13}, {13, 14}
     }
-    
+
     local function getPartPosition(char, partName, offset)
         local part = char:FindFirstChild(partName)
         if part then
@@ -590,72 +613,91 @@ local function updateSkeleton()
         end
         return nil
     end
-    
+
     for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= player and p.Character then
-            local humanoid = p.Character:FindFirstChild("Humanoid")
-            if humanoid and humanoid.Health > 0 then
-                local lines = {}
-                for _ = 1, #connections do
-                    local line = Drawing.new("Line")
-                    line.Color = skeletonColor
-                    line.Thickness = 2
-                    line.Transparency = 1
-                    table.insert(lines, line)
+        if p == player then continue end
+        local character = p.Character
+        if not character then continue end
+        local humanoid = character:FindFirstChild("Humanoid")
+        if not humanoid or humanoid.Health <= 0 then continue end
+
+        local lines = {}
+        for _ = 1, #connections do
+            local line = Drawing.new("Line")
+            line.Color = skeletonColor
+            line.Thickness = 2
+            line.Transparency = 1
+            table.insert(lines, line)
+        end
+
+        local function cleanupSkel()
+            if skeletonData[p] then
+                if skeletonData[p].lines then
+                    for _, l in pairs(skeletonData[p].lines) do pcall(function() l:Destroy() end) end
                 end
-                
-                local conn = renderStepped:Connect(function()
-                    if not p.Character then
-                        for _, line in pairs(lines) do line.Transparency = 1 end
-                        return
-                    end
-                    local humanoidNow = p.Character:FindFirstChild("Humanoid")
-                    if not humanoidNow or humanoidNow.Health <= 0 then
-                        for _, line in pairs(lines) do line.Transparency = 1 end
-                        return
-                    end
-                    
-                    local positions = {}
-                    for _, joint in pairs(joints) do
-                        local pos = getPartPosition(p.Character, joint.part, joint.offset)
-                        table.insert(positions, pos)
-                    end
-                    
-                    local screenPositions = {}
-                    for _, pos in pairs(positions) do
-                        if pos then
-                            local sp, onScreen = camera:WorldToViewportPoint(pos)
-                            if onScreen and sp.Z > 0 then
-                                table.insert(screenPositions, Vector2.new(sp.X, sp.Y))
-                            else
-                                table.insert(screenPositions, nil)
-                            end
-                        else
-                            table.insert(screenPositions, nil)
-                        end
-                    end
-                    
-                    for i, conn in pairs(connections) do
-                        local p1 = screenPositions[conn[1]]
-                        local p2 = screenPositions[conn[2]]
-                        if p1 and p2 then
-                            lines[i].From = p1
-                            lines[i].To = p2
-                            lines[i].Transparency = 0.7
-                        else
-                            lines[i].Transparency = 1
-                        end
-                    end
-                end)
-                
-                skeletonData[p] = {lines = lines, conn = conn}
+                if skeletonData[p].conn then pcall(function() skeletonData[p].conn:Disconnect() end) end
+                if skeletonData[p].diedConn then pcall(function() skeletonData[p].diedConn:Disconnect() end) end
+                skeletonData[p] = nil
             end
         end
+
+        local diedConn = humanoid.Died:Connect(cleanupSkel)
+
+        local conn = renderStepped:Connect(function()
+            if not p.Character then
+                for _, line in pairs(lines) do line.Transparency = 1 end
+                return
+            end
+            local humanoidNow = p.Character:FindFirstChild("Humanoid")
+            if not humanoidNow or humanoidNow.Health <= 0 then
+                for _, line in pairs(lines) do line.Transparency = 1 end
+                return
+            end
+
+            local positions = {}
+            for _, joint in pairs(joints) do
+                local pos = getPartPosition(p.Character, joint.part, joint.offset)
+                table.insert(positions, pos)
+            end
+
+            local screenPositions = {}
+            for _, pos in pairs(positions) do
+                if pos then
+                    local sp, onScreen = camera:WorldToViewportPoint(pos)
+                    if onScreen and sp.Z > 0 then
+                        table.insert(screenPositions, Vector2.new(sp.X, sp.Y))
+                    else
+                        table.insert(screenPositions, nil)
+                    end
+                else
+                    table.insert(screenPositions, nil)
+                end
+            end
+
+            for i, connIdx in pairs(connections) do
+                local p1 = screenPositions[connIdx[1]]
+                local p2 = screenPositions[connIdx[2]]
+                if p1 and p2 then
+                    lines[i].From = p1
+                    lines[i].To = p2
+                    lines[i].Transparency = 0.7
+                else
+                    lines[i].Transparency = 1
+                end
+            end
+        end)
+
+        skeletonData[p] = {
+            lines = lines,
+            conn = conn,
+            diedConn = diedConn,
+            cleanup = cleanupSkel
+        }
     end
 end
 
 -- ============================================================
---  ОБНОВЛЕНИЕ DISTANCE В РЕАЛЬНОМ ВРЕМЕНИ
+--  ОБНОВЛЕНИЕ DISTANCE В РЕАЛЬНОМ ВРЕМЕНИ (ИСПРАВЛЕННОЕ)
 -- ============================================================
 renderStepped:Connect(function()
     if not distEnabled then return end
@@ -665,31 +707,52 @@ renderStepped:Connect(function()
     
     for p, data in pairs(distData) do
         if data.billboard and data.billboard.Adornee and data.billboard.Adornee.Parent then
-            local humanoid = data.billboard.Adornee.Parent:FindFirstChild("Humanoid")
+            local adornee = data.billboard.Adornee
+            local humanoid = adornee.Parent:FindFirstChild("Humanoid")
             if humanoid and humanoid.Health > 0 then
-                local dist = (root.Position - data.billboard.Adornee.Position).Magnitude
+                local dist = (root.Position - adornee.Position).Magnitude
                 if data.label then
                     data.label.Text = math.round(dist) .. "m"
                 end
+                data.billboard.Enabled = true
             else
-                -- если умер, скрываем билборд (или удаляем?)
-                if data.billboard then data.billboard.Enabled = false end
+                data.billboard.Enabled = false
             end
         end
     end
 end)
 
 -- ============================================================
---  ОБНОВЛЕНИЕ ПРИ ПОЯВЛЕНИИ/УДАЛЕНИИ ИГРОКОВ
+--  ОБНОВЛЕНИЕ ПРИ ПОЯВЛЕНИИ/УДАЛЕНИИ ИГРОКОВ (ИСПРАВЛЕННОЕ)
 -- ============================================================
 game.Players.PlayerAdded:Connect(function(p)
-    p.CharacterAdded:Connect(function()
+    p.CharacterAdded:Connect(function(character)
         wait(0.5)
         if espEnabled then updateESP() end
         if boxEnabled then updateBoxes() end
         if distEnabled then updateDist() end
         if skeletonEnabled then updateSkeleton() end
+
+        -- Добавляем обработку смерти для этого персонажа
+        local humanoid = character:WaitForChild("Humanoid")
+        humanoid.Died:Connect(function()
+            -- Удаляем ESP
+            if espData[p] then
+                if espData[p].highlight then espData[p].highlight:Destroy() end
+                if espData[p].billboard then espData[p].billboard:Destroy() end
+                espData[p] = nil
+            end
+            -- Удаляем дистанцию
+            if distData[p] then
+                if distData[p].billboard then distData[p].billboard:Destroy() end
+                distData[p] = nil
+            end
+            -- Удаляем бокс и скелет через их cleanup
+            if boxData[p] and boxData[p].cleanup then boxData[p].cleanup() end
+            if skeletonData[p] and skeletonData[p].cleanup then skeletonData[p].cleanup() end
+        end)
     end)
+
     p.CharacterRemoving:Connect(function()
         if espData[p] then
             if espData[p].highlight then pcall(function() espData[p].highlight:Destroy() end) end
