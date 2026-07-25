@@ -1,6 +1,6 @@
 -- ============================================================
 --  LETUNIUM HUB (ИСПРАВЛЕННЫЙ ESP + 3D BOX + SKELETON)
---  by Tormentor412 (fixed by AI) – УПРОЩЁННЫЕ КНОПКИ
+--  by Tormentor412 (fixed by AI) – ФИНАЛЬНАЯ ВЕРСИЯ С КНОПКАМИ
 -- ============================================================
 
 print("🚀 Загрузка Letunium Hub...")
@@ -124,7 +124,7 @@ infoPanel.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================
---  ЗВЁЗДЫ
+--  ЗВЁЗДЫ (оставляем как есть)
 -- ============================================================
 local starContainer = Instance.new("Frame")
 starContainer.Size = UDim2.new(1, 0, 1, 0)
@@ -134,7 +134,6 @@ starContainer.ZIndex = 0
 starContainer.Parent = gui
 
 local stars = {}
-
 for i = 1, 40 do
     local star = Instance.new("Frame")
     local size = math.random(3, 7)
@@ -143,11 +142,9 @@ for i = 1, 40 do
     star.BackgroundTransparency = 0.2 + math.random(0, 50) / 100
     star.BorderSizePixel = 0
     star.Parent = starContainer
-    
     local starCorners = Instance.new("UICorner")
     starCorners.CornerRadius = UDim.new(1, 0)
     starCorners.Parent = star
-    
     local side = math.random(1, 4)
     local x, y
     if side == 1 then
@@ -163,10 +160,8 @@ for i = 1, 40 do
         x = math.random(-100, -30)
         y = math.random(-100, 500)
     end
-    
     star.Position = UDim2.new(0, x, 0, y)
     star.Rotation = math.random(0, 360)
-    
     table.insert(stars, {
         star = star,
         x = x,
@@ -178,28 +173,22 @@ end
 
 game:GetService("RunService").RenderStepped:Connect(function()
     if not starContainer.Visible then return end
-    
     local menuCenterX = 0.5 * gui.AbsoluteSize.X
     local menuCenterY = 0.5 * gui.AbsoluteSize.Y
-    
     for _, data in pairs(stars) do
         data.x = data.x + data.speedX
         data.y = data.y + data.speedY
-        
         local dx = data.x - menuCenterX
         local dy = data.y - menuCenterY
         local dist = math.sqrt(dx*dx + dy*dy)
-        
         if dist < 380 then
             data.x = data.x + (dx / (dist + 0.001)) * 0.5
             data.y = data.y + (dy / (dist + 0.001)) * 0.5
         end
-        
         if data.x > 1000 then data.x = -100 end
         if data.x < -100 then data.x = 1000 end
         if data.y > 550 then data.y = -100 end
         if data.y < -100 then data.y = 550 end
-        
         data.star.Position = UDim2.new(0, data.x, 0, data.y)
         data.star.Rotation = (data.star.Rotation + 1) % 360
     end
@@ -208,7 +197,6 @@ end)
 local function updateStarsVisibility()
     starContainer.Visible = frame.Visible
 end
-
 frame:GetPropertyChangedSignal("Visible"):Connect(updateStarsVisibility)
 updateStarsVisibility()
 
@@ -296,7 +284,7 @@ end
 tabButtons[1].TextColor3 = Color3.fromRGB(255, 255, 255)
 
 -- ============================================================
---  VISUALS
+--  VISUALS (НОВЫЙ БЛОК С КНОПКАМИ)
 -- ============================================================
 local visualsContent = contentFrames[1]
 
@@ -304,22 +292,35 @@ for _, child in pairs(visualsContent:GetChildren()) do
     child:Destroy()
 end
 
-local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Size = UDim2.new(1, 0, 1, 0)
-scrollFrame.BackgroundTransparency = 1
-scrollFrame.BorderSizePixel = 0
-scrollFrame.CanvasSize = UDim2.new(0, 0, 2, 0)
-scrollFrame.ScrollBarThickness = 4
-scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(200, 50, 50)
-scrollFrame.Parent = visualsContent
+-- Простой контейнер для кнопок (без прокрутки)
+local buttonContainer = Instance.new("Frame")
+buttonContainer.Size = UDim2.new(1, 0, 1, 0)
+buttonContainer.BackgroundTransparency = 1
+buttonContainer.Parent = visualsContent
 
-local scrollPadding = Instance.new("UIPadding")
-scrollPadding.PaddingLeft = UDim.new(0, 10)
-scrollPadding.PaddingTop = UDim.new(0, 10)
-scrollPadding.Parent = scrollFrame
+local yPos = 10
+local spacing = 42
+
+local function createSimpleButton(text, y)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 200, 0, 38)
+    btn.Position = UDim2.new(0, 10, 0, y)
+    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+    btn.BackgroundTransparency = 0.3
+    btn.Text = "☐ " .. text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 16
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.Parent = buttonContainer
+    local corners = Instance.new("UICorner")
+    corners.CornerRadius = UDim.new(0, 8)
+    corners.Parent = btn
+    return btn
+end
 
 -- ============================================================
---  ПЕРЕМЕННЫЕ ФУНКЦИЙ
+--  ПЕРЕМЕННЫЕ И ФУНКЦИИ ESP (оставляем без изменений)
 -- ============================================================
 local espEnabled = false
 local boxEnabled = false
@@ -484,7 +485,7 @@ local function updateBoxes()
 end
 
 -- ============================================================
---  DISTANCE
+--  DISTANCE (привязана к HumanoidRootPart, красный цвет)
 -- ============================================================
 local function updateDist()
     for _, data in pairs(distData) do
@@ -510,7 +511,7 @@ local function updateDist()
         label.Size = UDim2.new(1, 0, 1, 0)
         label.BackgroundTransparency = 1
         label.Text = "0m"
-        label.TextColor3 = Color3.fromRGB(255, 0, 0)
+        label.TextColor3 = Color3.fromRGB(255, 0, 0)  -- Красный
         label.TextSize = 14
         label.Font = Enum.Font.GothamBold
         label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
@@ -720,30 +721,8 @@ game.Players.PlayerRemoving:Connect(function(p)
 end)
 
 -- ============================================================
---  УПРОЩЁННЫЕ КНОПКИ (ГАРАНТИРОВАННО РАБОТАЮТ)
+--  СОЗДАНИЕ КНОПОК (ГАРАНТИРОВАННО ВИДИМЫ)
 -- ============================================================
-local yPos = 0
-local spacing = 42
-
-local function createSimpleButton(text, y)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 200, 0, 38)
-    btn.Position = UDim2.new(0, 10, 0, y)
-    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-    btn.BackgroundTransparency = 0.3
-    btn.Text = "☐ " .. text
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 16
-    btn.Font = Enum.Font.SourceSansBold
-    btn.TextXAlignment = Enum.TextXAlignment.Left
-    btn.Parent = scrollFrame
-    local corners = Instance.new("UICorner")
-    corners.CornerRadius = UDim.new(0, 8)
-    corners.Parent = btn
-    return btn
-end
-
--- Кнопка ESP
 local espBtn = createSimpleButton("ESP", yPos)
 espBtn.MouseButton1Click:Connect(function()
     espEnabled = not espEnabled
@@ -752,7 +731,6 @@ espBtn.MouseButton1Click:Connect(function()
 end)
 yPos = yPos + spacing
 
--- Кнопка 3D Box
 local boxBtn = createSimpleButton("3D Box", yPos)
 boxBtn.MouseButton1Click:Connect(function()
     boxEnabled = not boxEnabled
@@ -761,7 +739,6 @@ boxBtn.MouseButton1Click:Connect(function()
 end)
 yPos = yPos + spacing
 
--- Кнопка Distance
 local distBtn = createSimpleButton("Distance", yPos)
 distBtn.MouseButton1Click:Connect(function()
     distEnabled = not distEnabled
@@ -770,7 +747,6 @@ distBtn.MouseButton1Click:Connect(function()
 end)
 yPos = yPos + spacing
 
--- Кнопка Skeleton
 local skeletonBtn = createSimpleButton("Skeleton", yPos)
 skeletonBtn.MouseButton1Click:Connect(function()
     skeletonEnabled = not skeletonEnabled
@@ -779,8 +755,7 @@ skeletonBtn.MouseButton1Click:Connect(function()
 end)
 yPos = yPos + spacing
 
--- Устанавливаем размер прокрутки
-scrollFrame.CanvasSize = UDim2.new(0, 0, 0, yPos + 50)
+print("✅ Все кнопки созданы и добавлены в контейнер.")
 
 -- ============================================================
 --  AIMBOT (ЗАГЛУШКА)
