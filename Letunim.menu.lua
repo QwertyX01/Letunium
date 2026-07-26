@@ -758,7 +758,7 @@ yPos = yPos + spacing
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, yPos + 50)
 
 -- ============================================================
---  AIMBOT (НОВАЯ ФУНКЦИЯ)
+--  AIMBOT (ИСПРАВЛЕННАЯ ВЕРСИЯ)
 -- ============================================================
 local aimbotContent = contentFrames[2]
 for _, child in pairs(aimbotContent:GetChildren()) do
@@ -795,45 +795,56 @@ local function findTarget()
     local camLook = cam.CFrame.LookVector
     
     for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
-            local humanoid = p.Character:FindFirstChild("Humanoid")
-            if humanoid and humanoid.Health > 0 then
-                -- Проверка команды
-                local pTeam = p:FindFirstChild("Team")
-                if myTeam and pTeam then
-                    if pTeam.Value == myTeam.Value then
-                        continue -- союзник
-                    end
-                end
-                -- Видимость: проверим, видна ли голова
-                local head = p.Character.Head
-                local headPos = head.Position
-                -- Проверка, находится ли голова в поле зрения
-                local screenPos, onScreen = cam:WorldToViewportPoint(headPos)
-                if not onScreen then continue end
-                -- Raycast для проверки видимости (Line of Sight)
-                local raycastParams = RaycastParams.new()
-                raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-                raycastParams.FilterDescendantsInstances = {player.Character, p.Character}
-                local direction = (headPos - camPos).Unit
-                local distance = (headPos - camPos).Magnitude
-                local rayResult = workspace:Raycast(camPos, direction * distance, raycastParams)
-                if rayResult and rayResult.Instance and rayResult.Instance:IsDescendantOf(p.Character) then
-                    -- луч попал в персонажа – видим
-                else
-                    continue -- не видим
-                end
-                
-                -- Угол между направлением камеры и направлением на голову
-                local dirToTarget = (headPos - camPos).Unit
-                local angle = math.acos(math.clamp(camLook:Dot(dirToTarget), -1, 1))
-                if angle < bestAngle then
-                    bestAngle = angle
-                    bestTarget = p
-                end
+        if p == player then goto continue end
+        if not p.Character then goto continue end
+        local head = p.Character:FindFirstChild("Head")
+        if not head then goto continue end
+        
+        local humanoid = p.Character:FindFirstChild("Humanoid")
+        if not humanoid or humanoid.Health <= 0 then goto continue end
+        
+        -- Проверка команды (если есть)
+        local pTeam = p:FindFirstChild("Team")
+        if myTeam and pTeam then
+            if pTeam == myTeam then -- сравниваем объекты Team
+                goto continue -- союзник
             end
         end
+        
+        -- Проверка видимости (Line of Sight)
+        local headPos = head.Position
+        local screenPos, onScreen = cam:WorldToViewportPoint(headPos)
+        if not onScreen then goto continue end
+        
+        -- Raycast
+        local raycastParams = RaycastParams.new()
+        raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+        raycastParams.FilterDescendantsInstances = {player.Character, p.Character}
+        local direction = (headPos - camPos).Unit
+        local distance = (headPos - camPos).Magnitude
+        local rayResult = workspace:Raycast(camPos, direction * distance, raycastParams)
+        
+        -- Если луч попал не в игрока – значит не видим
+        if rayResult then
+            local hitInstance = rayResult.Instance
+            if not hitInstance or not hitInstance:IsDescendantOf(p.Character) then
+                goto continue -- за стеной
+            end
+        else
+            -- если rayResult nil – значит ничего не мешает, видим
+        end
+        
+        -- Угол между направлением камеры и направлением на голову
+        local dirToTarget = (headPos - camPos).Unit
+        local angle = math.acos(math.clamp(camLook:Dot(dirToTarget), -1, 1))
+        if angle < bestAngle then
+            bestAngle = angle
+            bestTarget = p
+        end
+        
+        ::continue::
     end
+    
     return bestTarget
 end
 
@@ -847,7 +858,8 @@ local function updateAimbot()
         return
     end
     if aimbotConnection then return end -- уже есть
-    aimbotConnection = renderStepped:Connect(function()
+    
+    aimbotConnection = game:GetService("RunService").RenderStepped:Connect(function()
         if not aimbotEnabled then return end
         local target = findTarget()
         if target then
@@ -876,10 +888,10 @@ aimbotBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Если меню закрывается, отключаем aimbot (можно опционально)
+-- Если меню закрывается, можно отключать aimbot (опционально)
 frame:GetPropertyChangedSignal("Visible"):Connect(function()
     if not frame.Visible and aimbotEnabled then
-        -- Можно оставить включенным, но если нужно отключать при закрытии меню — раскомментировать
+        -- Опционально: отключать aimbot при закрытии меню
         -- aimbotEnabled = false
         -- aimbotBtn.Text = "☐ Aimbot"
         -- if aimbotConnection then aimbotConnection:Disconnect() aimbotConnection = nil end
