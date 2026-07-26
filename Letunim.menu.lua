@@ -669,74 +669,11 @@ game.Players.PlayerRemoving:Connect(function(p)
 end)
 
 -- ============================================================
---  ====== НОВЫЙ БЛОК: AIMBOT ======
--- ============================================================
-
-local aimbotEnabled = false
-local aimbotTarget = nil
-
--- Проверка видимости головы (без стен)
-local function isHeadVisible(headPos)
-    local cameraPos = camera.CFrame.Position
-    local direction = (headPos - cameraPos).Unit
-    local distance = (headPos - cameraPos).Magnitude
-    local rayParams = RaycastParams.new()
-    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
-    rayParams.FilterDescendantsInstances = {player.Character}
-    local result = workspace:Raycast(cameraPos, direction * distance, rayParams)
-    return result == nil
-end
-
--- Поиск лучшей цели (враг, живой, видимый, ближайший по углу)
-local function getBestTarget()
-    local bestAngle = math.rad(90)  -- максимальный угол обзора 90°
-    local bestTarget = nil
-    local bestHead = nil
-
-    local myTeam = player.Team
-    if not myTeam then return nil, nil end
-
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= player and p.Team ~= myTeam and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
-            local head = p.Character.Head
-            local headPos = head.Position
-            local screenPoint, onScreen = camera:WorldToViewportPoint(headPos)
-            if onScreen and screenPoint.Z > 0 then
-                -- проверка видимости
-                if isHeadVisible(headPos) then
-                    -- угол между направлением камеры и вектором на голову
-                    local cameraDir = camera.CFrame.LookVector
-                    local toTarget = (headPos - camera.CFrame.Position).Unit
-                    local angle = math.acos(math.clamp(cameraDir:Dot(toTarget), -1, 1))
-                    if angle < bestAngle then
-                        bestAngle = angle
-                        bestTarget = p
-                        bestHead = headPos
-                    end
-                end
-            end
-        end
-    end
-    return bestTarget, bestHead
-end
-
--- Непосредственное наведение
-local function doAimbot()
-    local target, headPos = getBestTarget()
-    if target and headPos then
-        camera.CFrame = CFrame.lookAt(camera.CFrame.Position, headPos)
-    end
-end
-
--- ============================================================
---  ОБНОВЛЕНИЕ КАЖДЫЙ КАДР (ESP + AIMBOT)
+--  ОБНОВЛЕНИЕ КАЖДЫЙ КАДР
 -- ============================================================
 renderStepped:Connect(function()
     if espEnabled then
         updateESP()
-    end
-    if aimbotEnabled then
-        doAimbot()
     end
 end)
 
@@ -821,48 +758,132 @@ yPos = yPos + spacing
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, yPos + 50)
 
 -- ============================================================
---  AIMBOT (НОВАЯ ВКЛАДКА)
+--  AIMBOT (НОВАЯ ФУНКЦИЯ)
 -- ============================================================
 local aimbotContent = contentFrames[2]
 for _, child in pairs(aimbotContent:GetChildren()) do
     child:Destroy()
 end
 
--- Создаём контейнер для кнопок
-local aimbotScroll = Instance.new("ScrollingFrame")
-aimbotScroll.Size = UDim2.new(1, 0, 1, 0)
-aimbotScroll.BackgroundTransparency = 1
-aimbotScroll.BorderSizePixel = 0
-aimbotScroll.CanvasSize = UDim2.new(0, 0, 0, 100)
-aimbotScroll.ScrollBarThickness = 4
-aimbotScroll.ScrollBarImageColor3 = Color3.fromRGB(200, 50, 50)
-aimbotScroll.Parent = aimbotContent
+local aimbotEnabled = false
+local aimbotConnection = nil
 
-local aimbotPadding = Instance.new("UIPadding")
-aimbotPadding.PaddingLeft = UDim.new(0, 10)
-aimbotPadding.PaddingTop = UDim.new(0, 10)
-aimbotPadding.Parent = aimbotScroll
-
--- Кнопка включения
+-- Кнопка Aimbot
 local aimbotBtn = Instance.new("TextButton")
 aimbotBtn.Size = UDim2.new(0, 220, 0, 38)
-aimbotBtn.Position = UDim2.new(0, 0, 0, 0)
+aimbotBtn.Position = UDim2.new(0, 10, 0.1, 0)
 aimbotBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
 aimbotBtn.BackgroundTransparency = 0.3
-aimbotBtn.Text = "☐ Enable Aimbot"
+aimbotBtn.Text = "☐ Aimbot"
 aimbotBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 aimbotBtn.TextSize = 16
 aimbotBtn.Font = Enum.Font.SourceSansBold
 aimbotBtn.TextXAlignment = Enum.TextXAlignment.Left
-aimbotBtn.Parent = aimbotScroll
+aimbotBtn.Parent = aimbotContent
+local aimbotCorners = Instance.new("UICorner")
+aimbotCorners.CornerRadius = UDim.new(0, 8)
+aimbotCorners.Parent = aimbotBtn
 
-local cornersBtn = Instance.new("UICorner")
-cornersBtn.CornerRadius = UDim.new(0, 8)
-cornersBtn.Parent = aimbotBtn
+-- Функция поиска цели (враг, видим, голова)
+local function findTarget()
+    local myTeam = player:FindFirstChild("Team")
+    local bestTarget = nil
+    local bestAngle = math.rad(90) -- максимальный угол 90 градусов
+    
+    local cam = workspace.CurrentCamera
+    local camPos = cam.CFrame.Position
+    local camLook = cam.CFrame.LookVector
+    
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
+            local humanoid = p.Character:FindFirstChild("Humanoid")
+            if humanoid and humanoid.Health > 0 then
+                -- Проверка команды
+                local pTeam = p:FindFirstChild("Team")
+                if myTeam and pTeam then
+                    if pTeam.Value == myTeam.Value then
+                        continue -- союзник
+                    end
+                end
+                -- Видимость: проверим, видна ли голова
+                local head = p.Character.Head
+                local headPos = head.Position
+                -- Проверка, находится ли голова в поле зрения
+                local screenPos, onScreen = cam:WorldToViewportPoint(headPos)
+                if not onScreen then continue end
+                -- Raycast для проверки видимости (Line of Sight)
+                local raycastParams = RaycastParams.new()
+                raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+                raycastParams.FilterDescendantsInstances = {player.Character, p.Character}
+                local direction = (headPos - camPos).Unit
+                local distance = (headPos - camPos).Magnitude
+                local rayResult = workspace:Raycast(camPos, direction * distance, raycastParams)
+                if rayResult and rayResult.Instance and rayResult.Instance:IsDescendantOf(p.Character) then
+                    -- луч попал в персонажа – видим
+                else
+                    continue -- не видим
+                end
+                
+                -- Угол между направлением камеры и направлением на голову
+                local dirToTarget = (headPos - camPos).Unit
+                local angle = math.acos(math.clamp(camLook:Dot(dirToTarget), -1, 1))
+                if angle < bestAngle then
+                    bestAngle = angle
+                    bestTarget = p
+                end
+            end
+        end
+    end
+    return bestTarget
+end
 
+-- Обновление Aimbot (вызывается в RenderStepped)
+local function updateAimbot()
+    if not aimbotEnabled then
+        if aimbotConnection then
+            aimbotConnection:Disconnect()
+            aimbotConnection = nil
+        end
+        return
+    end
+    if aimbotConnection then return end -- уже есть
+    aimbotConnection = renderStepped:Connect(function()
+        if not aimbotEnabled then return end
+        local target = findTarget()
+        if target then
+            local head = target.Character.Head
+            local cam = workspace.CurrentCamera
+            local camPos = cam.CFrame.Position
+            local lookAt = (head.Position - camPos).Unit
+            cam.CFrame = CFrame.new(camPos, camPos + lookAt)
+        end
+    end)
+end
+
+-- Переключение Aimbot
 aimbotBtn.MouseButton1Click:Connect(function()
     aimbotEnabled = not aimbotEnabled
-    aimbotBtn.Text = aimbotEnabled and "☑ Enable Aimbot" or "☐ Enable Aimbot"
+    aimbotBtn.Text = aimbotEnabled and "☑ Aimbot" or "☐ Aimbot"
+    if aimbotEnabled then
+        print("🔫 Aimbot включен")
+        updateAimbot()
+    else
+        print("🔫 Aimbot выключен")
+        if aimbotConnection then
+            aimbotConnection:Disconnect()
+            aimbotConnection = nil
+        end
+    end
+end)
+
+-- Если меню закрывается, отключаем aimbot (можно опционально)
+frame:GetPropertyChangedSignal("Visible"):Connect(function()
+    if not frame.Visible and aimbotEnabled then
+        -- Можно оставить включенным, но если нужно отключать при закрытии меню — раскомментировать
+        -- aimbotEnabled = false
+        -- aimbotBtn.Text = "☐ Aimbot"
+        -- if aimbotConnection then aimbotConnection:Disconnect() aimbotConnection = nil end
+    end
 end)
 
 -- ============================================================
@@ -899,5 +920,6 @@ watermark.Parent = frame
 
 print("✅ Letunium Hub загружен успешно!")
 print("🔑 Нажми на панель Letunium Opening чтобы открыть/закрыть")
-print("🎯 Aimbot доступен во вкладке AIMBOT")
+print("🎨 VISUALS: ESP, 3D Box, Distance, Skeleton")
+print("🎯 AIMBOT: Aimbot (только враги, голова, видимость)")
 print("✅ ESP обновляется каждый кадр и удаляется при смерти")
