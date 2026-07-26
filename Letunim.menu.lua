@@ -1,6 +1,6 @@
 -- ============================================================
---  LETUNIUM HUB (ИСПРАВЛЕННЫЙ ESP + 3D BOX + SKELETON)
---  by Tormentor412 (fixed by AI) – ФИНАЛЬНАЯ ВЕРСИЯ С КНОПКАМИ
+--  LETUNIUM HUB (ИСПРАВЛЕННАЯ СИСТЕМА ESP + AIMBOT)
+--  by Tormentor412
 -- ============================================================
 
 print("🚀 Загрузка Letunium Hub...")
@@ -81,7 +81,7 @@ title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = header
 
 -- ============================================================
---  ИНФО-ПАНЕЛЬ
+--  ИНФО-ПАНЕЛЬ (ОТКРЫВАЕТ/ЗАКРЫВАЕТ МЕНЮ)
 -- ============================================================
 local infoPanel = Instance.new("TextButton")
 infoPanel.Size = UDim2.new(0, 180, 0, 32)
@@ -124,7 +124,7 @@ infoPanel.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================
---  ЗВЁЗДЫ (оставляем как есть)
+--  ЗВЁЗДЫ
 -- ============================================================
 local starContainer = Instance.new("Frame")
 starContainer.Size = UDim2.new(1, 0, 1, 0)
@@ -134,6 +134,7 @@ starContainer.ZIndex = 0
 starContainer.Parent = gui
 
 local stars = {}
+
 for i = 1, 40 do
     local star = Instance.new("Frame")
     local size = math.random(3, 7)
@@ -142,9 +143,11 @@ for i = 1, 40 do
     star.BackgroundTransparency = 0.2 + math.random(0, 50) / 100
     star.BorderSizePixel = 0
     star.Parent = starContainer
+    
     local starCorners = Instance.new("UICorner")
     starCorners.CornerRadius = UDim.new(1, 0)
     starCorners.Parent = star
+    
     local side = math.random(1, 4)
     local x, y
     if side == 1 then
@@ -160,8 +163,10 @@ for i = 1, 40 do
         x = math.random(-100, -30)
         y = math.random(-100, 500)
     end
+    
     star.Position = UDim2.new(0, x, 0, y)
     star.Rotation = math.random(0, 360)
+    
     table.insert(stars, {
         star = star,
         x = x,
@@ -173,22 +178,28 @@ end
 
 game:GetService("RunService").RenderStepped:Connect(function()
     if not starContainer.Visible then return end
+    
     local menuCenterX = 0.5 * gui.AbsoluteSize.X
     local menuCenterY = 0.5 * gui.AbsoluteSize.Y
+    
     for _, data in pairs(stars) do
         data.x = data.x + data.speedX
         data.y = data.y + data.speedY
+        
         local dx = data.x - menuCenterX
         local dy = data.y - menuCenterY
         local dist = math.sqrt(dx*dx + dy*dy)
+        
         if dist < 380 then
             data.x = data.x + (dx / (dist + 0.001)) * 0.5
             data.y = data.y + (dy / (dist + 0.001)) * 0.5
         end
+        
         if data.x > 1000 then data.x = -100 end
         if data.x < -100 then data.x = 1000 end
         if data.y > 550 then data.y = -100 end
         if data.y < -100 then data.y = 550 end
+        
         data.star.Position = UDim2.new(0, data.x, 0, data.y)
         data.star.Rotation = (data.star.Rotation + 1) % 360
     end
@@ -197,6 +208,7 @@ end)
 local function updateStarsVisibility()
     starContainer.Visible = frame.Visible
 end
+
 frame:GetPropertyChangedSignal("Visible"):Connect(updateStarsVisibility)
 updateStarsVisibility()
 
@@ -284,7 +296,7 @@ end
 tabButtons[1].TextColor3 = Color3.fromRGB(255, 255, 255)
 
 -- ============================================================
---  VISUALS (НОВЫЙ БЛОК С КНОПКАМИ)
+--  VISUALS
 -- ============================================================
 local visualsContent = contentFrames[1]
 
@@ -292,19 +304,30 @@ for _, child in pairs(visualsContent:GetChildren()) do
     child:Destroy()
 end
 
--- Простой контейнер для кнопок (без прокрутки)
-local buttonContainer = Instance.new("Frame")
-buttonContainer.Size = UDim2.new(1, 0, 1, 0)
-buttonContainer.BackgroundTransparency = 1
-buttonContainer.Parent = visualsContent
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.BorderSizePixel = 0
+scrollFrame.CanvasSize = UDim2.new(0, 0, 2, 0)
+scrollFrame.ScrollBarThickness = 4
+scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(200, 50, 50)
+scrollFrame.Parent = visualsContent
 
-local yPos = 10
+local scrollPadding = Instance.new("UIPadding")
+scrollPadding.PaddingLeft = UDim.new(0, 10)
+scrollPadding.PaddingTop = UDim.new(0, 10)
+scrollPadding.Parent = scrollFrame
+
+local yPos = 0
 local spacing = 42
 
-local function createSimpleButton(text, y)
+-- ============================================================
+--  ФУНКЦИЯ СОЗДАНИЯ КНОПКИ
+-- ============================================================
+local function createButton(text, y)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 200, 0, 38)
-    btn.Position = UDim2.new(0, 10, 0, y)
+    btn.Size = UDim2.new(0, 220, 0, 38)
+    btn.Position = UDim2.new(0, 0, 0, y)
     btn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
     btn.BackgroundTransparency = 0.3
     btn.Text = "☐ " .. text
@@ -312,7 +335,7 @@ local function createSimpleButton(text, y)
     btn.TextSize = 16
     btn.Font = Enum.Font.SourceSansBold
     btn.TextXAlignment = Enum.TextXAlignment.Left
-    btn.Parent = buttonContainer
+    btn.Parent = scrollFrame
     local corners = Instance.new("UICorner")
     corners.CornerRadius = UDim.new(0, 8)
     corners.Parent = btn
@@ -320,286 +343,264 @@ local function createSimpleButton(text, y)
 end
 
 -- ============================================================
---  ПЕРЕМЕННЫЕ И ФУНКЦИИ ESP (оставляем без изменений)
+--  СИСТЕМА ESP (ИСПРАВЛЕННАЯ)
 -- ============================================================
 local espEnabled = false
-local boxEnabled = false
-local distEnabled = false
-local skeletonEnabled = false
+local espData = {}  -- { [Player] = { highlight, billboard, label, boxLines, skeletonLines, distBillboard, distLabel } }
 
-local espData = {}
-local boxData = {}
-local distData = {}
-local skeletonData = {}
-
-local boxColor = Color3.fromRGB(255, 0, 0)
-local skeletonColor = Color3.fromRGB(0, 255, 0)
-
+local espBoxColor = Color3.fromRGB(255, 0, 0)
+local espSkeletonColor = Color3.fromRGB(0, 255, 0)
 local hasDrawing = pcall(function() return Drawing end) and Drawing ~= nil
-local renderStepped = game:GetService("RunService").RenderStepped
 local camera = workspace.CurrentCamera
+local renderStepped = game:GetService("RunService").RenderStepped
 
 -- ============================================================
---  ОЧИСТКА ВСЕХ ДАННЫХ
+--  ОЧИСТКА ESP ДЛЯ ОДНОГО ИГРОКА
 -- ============================================================
-local function clearAll()
-    for _, data in pairs(espData) do
-        if data.highlight then pcall(function() data.highlight:Destroy() end) end
-        if data.billboard then pcall(function() data.billboard:Destroy() end) end
-        if data.label then pcall(function() data.label:Destroy() end) end
-    end
-    espData = {}
-    for _, data in pairs(boxData) do
-        if data.lines then for _, l in pairs(data.lines) do pcall(function() l:Destroy() end) end end
-        if data.conn then pcall(function() data.conn:Disconnect() end) end
-    end
-    boxData = {}
-    for _, data in pairs(distData) do
-        if data.billboard then pcall(function() data.billboard:Destroy() end) end
-        if data.label then pcall(function() data.label:Destroy() end) end
-    end
-    distData = {}
-    for _, data in pairs(skeletonData) do
-        if data.lines then for _, l in pairs(data.lines) do pcall(function() l:Destroy() end) end end
-        if data.conn then pcall(function() data.conn:Disconnect() end) end
-    end
-    skeletonData = {}
-end
-
--- ============================================================
---  ESP (HIGHLIGHT + ИМЯ)
--- ============================================================
-local function updateESP()
-    for _, data in pairs(espData) do
-        if data.highlight then pcall(function() data.highlight:Destroy() end) end
-        if data.billboard then pcall(function() data.billboard:Destroy() end) end
-        if data.label then pcall(function() data.label:Destroy() end) end
-    end
-    espData = {}
-    if not espEnabled then return end
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= player and p.Character and p.Character:FindFirstChild("Humanoid") then
-            local humanoid = p.Character.Humanoid
-            if humanoid.Health > 0 then
-                local highlight = Instance.new("Highlight")
-                highlight.Adornee = p.Character
-                highlight.FillColor = Color3.fromRGB(255, 0, 0)
-                highlight.FillTransparency = 0.4
-                highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
-                highlight.OutlineTransparency = 0.2
-                highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                highlight.Parent = p.Character
-                local billboard = Instance.new("BillboardGui")
-                billboard.Size = UDim2.new(0, 150, 0, 30)
-                billboard.Adornee = p.Character:FindFirstChild("Head") or p.Character:FindFirstChild("HumanoidRootPart")
-                billboard.StudsOffset = Vector3.new(0, 2.5, 0)
-                billboard.AlwaysOnTop = true
-                billboard.Parent = p.Character
-                local label = Instance.new("TextLabel")
-                label.Size = UDim2.new(1, 0, 1, 0)
-                label.BackgroundTransparency = 1
-                label.Text = p.Name
-                label.TextColor3 = Color3.fromRGB(255, 255, 255)
-                label.TextSize = 14
-                label.Font = Enum.Font.GothamBold
-                label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-                label.TextStrokeTransparency = 0.3
-                label.Parent = billboard
-                espData[p] = {highlight = highlight, billboard = billboard, label = label}
-            end
+local function clearPlayerESP(p)
+    local data = espData[p]
+    if not data then return end
+    
+    if data.highlight then pcall(function() data.highlight:Destroy() end) end
+    if data.billboard then pcall(function() data.billboard:Destroy() end) end
+    if data.label then pcall(function() data.label:Destroy() end) end
+    
+    if data.boxLines then
+        for _, line in pairs(data.boxLines) do
+            pcall(function() line:Remove() end)
         end
     end
+    
+    if data.skeletonLines then
+        for _, line in pairs(data.skeletonLines) do
+            pcall(function() line:Remove() end)
+        end
+    end
+    
+    if data.distBillboard then pcall(function() data.distBillboard:Destroy() end) end
+    if data.distLabel then pcall(function() data.distLabel:Destroy() end) end
+    
+    espData[p] = nil
 end
 
 -- ============================================================
---  3D BOX (ИСПРАВЛЕННАЯ ВЕРСИЯ)
+--  ОЧИСТКА ВСЕГО ESP
 -- ============================================================
-local function updateBoxes()
-    for _, data in pairs(boxData) do
-        if data.lines then for _, l in pairs(data.lines) do pcall(function() l:Destroy() end) end end
-        if data.conn then pcall(function() data.conn:Disconnect() end) end
-        if data.diedConn then pcall(function() data.diedConn:Disconnect() end) end
+local function clearAllESP()
+    for p, _ in pairs(espData) do
+        clearPlayerESP(p)
     end
-    boxData = {}
-    if not boxEnabled or not hasDrawing then return end
-    local w, h, d = 2.5, 4.5, 1.5
-    local corners = {
-        Vector3.new(-w, -h, -d), Vector3.new(w, -h, -d), Vector3.new(w, -h, d), Vector3.new(-w, -h, d),
-        Vector3.new(-w,  h, -d), Vector3.new(w,  h, -d), Vector3.new(w,  h, d), Vector3.new(-w,  h, d)
-    }
-    local edges = {{1,2},{2,3},{3,4},{4,1},{5,6},{6,7},{7,8},{8,5},{1,5},{2,6},{3,7},{4,8}}
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p == player then continue end
-        local character = p.Character
-        if not character then continue end
-        local hrp = character:FindFirstChild("HumanoidRootPart")
-        local humanoid = character:FindFirstChild("Humanoid")
-        if not hrp or not humanoid or humanoid.Health <= 0 then continue end
-        local lines = {}
-        for _ = 1, #edges do
+    espData = {}
+end
+
+-- ============================================================
+--  СОЗДАНИЕ ESP ДЛЯ ИГРОКА (ОДИН РАЗ)
+-- ============================================================
+local function createPlayerESP(p)
+    if p == player then return end
+    if espData[p] then clearPlayerESP(p) end
+    
+    local data = {}
+    
+    -- HIGHLIGHT
+    local highlight = Instance.new("Highlight")
+    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+    highlight.FillTransparency = 0.4
+    highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+    highlight.OutlineTransparency = 0.2
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    data.highlight = highlight
+    
+    -- BILLBOARD (имя)
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(0, 150, 0, 30)
+    billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+    billboard.AlwaysOnTop = true
+    data.billboard = billboard
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = p.Name
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextSize = 14
+    label.Font = Enum.Font.GothamBold
+    label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    label.TextStrokeTransparency = 0.3
+    label.Parent = billboard
+    data.label = label
+    
+    -- 3D BOX
+    if hasDrawing then
+        local boxLines = {}
+        for i = 1, 12 do
             local line = Drawing.new("Line")
-            line.Color = boxColor
+            line.Color = espBoxColor
             line.Thickness = 2
             line.Transparency = 1
-            table.insert(lines, line)
+            table.insert(boxLines, line)
         end
-        local function cleanupBox()
-            if boxData[p] then
-                if boxData[p].lines then for _, l in pairs(boxData[p].lines) do pcall(function() l:Destroy() end) end end
-                if boxData[p].conn then pcall(function() boxData[p].conn:Disconnect() end) end
-                if boxData[p].diedConn then pcall(function() boxData[p].diedConn:Disconnect() end) end
-                boxData[p] = nil
+        data.boxLines = boxLines
+        
+        -- SKELETON
+        local skeletonLines = {}
+        for i = 1, 13 do
+            local line = Drawing.new("Line")
+            line.Color = espSkeletonColor
+            line.Thickness = 2
+            line.Transparency = 1
+            table.insert(skeletonLines, line)
+        end
+        data.skeletonLines = skeletonLines
+    end
+    
+    -- DISTANCE
+    local distBillboard = Instance.new("BillboardGui")
+    distBillboard.Size = UDim2.new(0, 100, 0, 25)
+    distBillboard.StudsOffset = Vector3.new(0, 2, 0)
+    distBillboard.AlwaysOnTop = true
+    data.distBillboard = distBillboard
+    
+    local distLabel = Instance.new("TextLabel")
+    distLabel.Size = UDim2.new(1, 0, 1, 0)
+    distLabel.BackgroundTransparency = 1
+    distLabel.Text = "0m"
+    distLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
+    distLabel.TextSize = 14
+    distLabel.Font = Enum.Font.GothamBold
+    distLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    distLabel.TextStrokeTransparency = 0.3
+    distLabel.Parent = distBillboard
+    data.distLabel = distLabel
+    
+    espData[p] = data
+end
+
+-- ============================================================
+--  ОБНОВЛЕНИЕ ESP (ВЫЗЫВАЕТСЯ КАЖДЫЙ КАДР)
+-- ============================================================
+local function updateESP()
+    local myRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    local myPos = myRoot and myRoot.Position or Vector3.new(0, 0, 0)
+    
+    for p, data in pairs(espData) do
+        local char = p.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        local humanoid = char and char:FindFirstChild("Humanoid")
+        local head = char and char:FindFirstChild("Head")
+        
+        -- ПРОВЕРКА: жив ли игрок и видим ли
+        local isValid = char and hrp and humanoid and humanoid.Health > 0 and head
+        
+        if not isValid then
+            -- Игрок мёртв или не загружен — скрываем всё
+            if data.highlight then data.highlight.Adornee = nil end
+            if data.billboard then data.billboard.Adornee = nil end
+            if data.distBillboard then data.distBillboard.Adornee = nil end
+            if data.boxLines then
+                for _, line in pairs(data.boxLines) do
+                    line.Transparency = 1
+                end
+            end
+            if data.skeletonLines then
+                for _, line in pairs(data.skeletonLines) do
+                    line.Transparency = 1
+                end
+            end
+            goto continue
+        end
+        
+        -- ОБНОВЛЯЕМ HIGHLIGHT
+        if data.highlight then
+            data.highlight.Adornee = char
+            data.highlight.Enabled = true
+        end
+        
+        -- ОБНОВЛЯЕМ BILLBOARD (имя)
+        if data.billboard then
+            data.billboard.Adornee = head
+            data.billboard.Enabled = true
+        end
+        
+        -- ОБНОВЛЯЕМ DISTANCE
+        if data.distBillboard then
+            data.distBillboard.Adornee = head
+            data.distBillboard.Enabled = true
+            if data.distLabel then
+                local dist = (myPos - hrp.Position).Magnitude
+                data.distLabel.Text = math.round(dist) .. "m"
             end
         end
-        local diedConn = humanoid.Died:Connect(cleanupBox)
-        local conn = renderStepped:Connect(function()
-            if not hrp or not hrp.Parent then
-                for _, line in pairs(lines) do line.Transparency = 1 end
-                return
-            end
-            local humanoidNow = hrp.Parent:FindFirstChild("Humanoid")
-            if not humanoidNow or humanoidNow.Health <= 0 then
-                for _, line in pairs(lines) do line.Transparency = 1 end
-                return
-            end
+        
+        -- ОБНОВЛЯЕМ 3D BOX
+        if data.boxLines and hasDrawing then
+            local w, h, d = 2.5, 4.5, 1.5
+            local corners = {
+                Vector3.new(-w, -h, -d), Vector3.new(w, -h, -d), Vector3.new(w, -h, d), Vector3.new(-w, -h, d),
+                Vector3.new(-w, h, -d), Vector3.new(w, h, -d), Vector3.new(w, h, d), Vector3.new(-w, h, d)
+            }
+            local edges = {{1,2},{2,3},{3,4},{4,1},{5,6},{6,7},{7,8},{8,5},{1,5},{2,6},{3,7},{4,8}}
+            
             local screenCorners = {}
             for _, corner in pairs(corners) do
                 local worldPos = hrp.CFrame:PointToWorldSpace(corner)
                 local sp, onScreen = camera:WorldToViewportPoint(worldPos)
-                table.insert(screenCorners, {pos = Vector2.new(sp.X, sp.Y), on = onScreen, z = sp.Z})
+                table.insert(screenCorners, {pos = Vector2.new(sp.X, sp.Y), on = onScreen})
             end
+            
             for i, edge in pairs(edges) do
-                local c1 = screenCorners[edge[1]]
-                local c2 = screenCorners[edge[2]]
-                if c1.on and c2.on and c1.z > 0 and c2.z > 0 then
-                    lines[i].From = c1.pos
-                    lines[i].To = c2.pos
-                    lines[i].Transparency = 0.5
+                if screenCorners[edge[1]].on and screenCorners[edge[2]].on then
+                    data.boxLines[i].From = screenCorners[edge[1]].pos
+                    data.boxLines[i].To = screenCorners[edge[2]].pos
+                    data.boxLines[i].Transparency = 0.5
                 else
-                    lines[i].Transparency = 1
+                    data.boxLines[i].Transparency = 1
                 end
             end
-        end)
-        boxData[p] = {lines = lines, conn = conn, diedConn = diedConn, cleanup = cleanupBox}
-    end
-end
-
--- ============================================================
---  DISTANCE (привязана к HumanoidRootPart, красный цвет)
--- ============================================================
-local function updateDist()
-    for _, data in pairs(distData) do
-        if data.billboard then pcall(function() data.billboard:Destroy() end) end
-        if data.label then pcall(function() data.label:Destroy() end) end
-    end
-    distData = {}
-    if not distEnabled then return end
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p == player then continue end
-        local character = p.Character
-        if not character then continue end
-        local rootPart = character:FindFirstChild("HumanoidRootPart")
-        local humanoid = character:FindFirstChild("Humanoid")
-        if not rootPart or not humanoid or humanoid.Health <= 0 then continue end
-        local billboard = Instance.new("BillboardGui")
-        billboard.Size = UDim2.new(0, 120, 0, 25)
-        billboard.Adornee = rootPart
-        billboard.StudsOffset = Vector3.new(0, 3, 0)
-        billboard.AlwaysOnTop = true
-        billboard.Parent = character
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1, 0, 1, 0)
-        label.BackgroundTransparency = 1
-        label.Text = "0m"
-        label.TextColor3 = Color3.fromRGB(255, 0, 0)  -- Красный
-        label.TextSize = 14
-        label.Font = Enum.Font.GothamBold
-        label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-        label.TextStrokeTransparency = 0.3
-        label.Parent = billboard
-        distData[p] = {billboard = billboard, label = label}
-    end
-end
-
--- ============================================================
---  SKELETON (ИСПРАВЛЕННАЯ ВЕРСИЯ)
--- ============================================================
-local function updateSkeleton()
-    for _, data in pairs(skeletonData) do
-        if data.lines then for _, l in pairs(data.lines) do pcall(function() l:Destroy() end) end end
-        if data.conn then pcall(function() data.conn:Disconnect() end) end
-        if data.diedConn then pcall(function() data.diedConn:Disconnect() end) end
-    end
-    skeletonData = {}
-    if not skeletonEnabled or not hasDrawing then return end
-    local joints = {
-        {part = "Head", offset = Vector3.new(0, 0, 0)},
-        {part = "UpperTorso", offset = Vector3.new(0, 0, 0)},
-        {part = "UpperTorso", offset = Vector3.new(0, 1.5, 0)},
-        {part = "UpperTorso", offset = Vector3.new(1.5, 0.5, 0)},
-        {part = "UpperTorso", offset = Vector3.new(-1.5, 0.5, 0)},
-        {part = "RightUpperArm", offset = Vector3.new(0, 0, 0)},
-        {part = "RightLowerArm", offset = Vector3.new(0, 0, 0)},
-        {part = "LeftUpperArm", offset = Vector3.new(0, 0, 0)},
-        {part = "LeftLowerArm", offset = Vector3.new(0, 0, 0)},
-        {part = "UpperTorso", offset = Vector3.new(0, -2, 0)},
-        {part = "RightUpperLeg", offset = Vector3.new(0, 0, 0)},
-        {part = "RightLowerLeg", offset = Vector3.new(0, 0, 0)},
-        {part = "LeftUpperLeg", offset = Vector3.new(0, 0, 0)},
-        {part = "LeftLowerLeg", offset = Vector3.new(0, 0, 0)}
-    }
-    local connections = {
-        {1, 2}, {2, 3}, {3, 4}, {3, 5}, {4, 6}, {6, 7}, {5, 8}, {8, 9},
-        {3, 10}, {10, 11}, {11, 12}, {10, 13}, {13, 14}
-    }
-    local function getPartPosition(char, partName, offset)
-        local part = char:FindFirstChild(partName)
-        if part then return part.Position + offset end
-        return nil
-    end
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p == player then continue end
-        local character = p.Character
-        if not character then continue end
-        local humanoid = character:FindFirstChild("Humanoid")
-        if not humanoid or humanoid.Health <= 0 then continue end
-        local lines = {}
-        for _ = 1, #connections do
-            local line = Drawing.new("Line")
-            line.Color = skeletonColor
-            line.Thickness = 2
-            line.Transparency = 1
-            table.insert(lines, line)
         end
-        local function cleanupSkel()
-            if skeletonData[p] then
-                if skeletonData[p].lines then for _, l in pairs(skeletonData[p].lines) do pcall(function() l:Destroy() end) end end
-                if skeletonData[p].conn then pcall(function() skeletonData[p].conn:Disconnect() end) end
-                if skeletonData[p].diedConn then pcall(function() skeletonData[p].diedConn:Disconnect() end) end
-                skeletonData[p] = nil
+        
+        -- ОБНОВЛЯЕМ SKELETON
+        if data.skeletonLines and hasDrawing then
+            local joints = {
+                {part = "Head", offset = Vector3.new(0, 0, 0)},
+                {part = "UpperTorso", offset = Vector3.new(0, 0, 0)},
+                {part = "UpperTorso", offset = Vector3.new(0, 1.5, 0)},
+                {part = "UpperTorso", offset = Vector3.new(1.5, 0.5, 0)},
+                {part = "UpperTorso", offset = Vector3.new(-1.5, 0.5, 0)},
+                {part = "RightUpperArm", offset = Vector3.new(0, 0, 0)},
+                {part = "RightLowerArm", offset = Vector3.new(0, 0, 0)},
+                {part = "LeftUpperArm", offset = Vector3.new(0, 0, 0)},
+                {part = "LeftLowerArm", offset = Vector3.new(0, 0, 0)},
+                {part = "UpperTorso", offset = Vector3.new(0, -2, 0)},
+                {part = "RightUpperLeg", offset = Vector3.new(0, 0, 0)},
+                {part = "RightLowerLeg", offset = Vector3.new(0, 0, 0)},
+                {part = "LeftUpperLeg", offset = Vector3.new(0, 0, 0)},
+                {part = "LeftLowerLeg", offset = Vector3.new(0, 0, 0)}
+            }
+            local connections = {
+                {1, 2}, {2, 3}, {3, 4}, {3, 5}, {4, 6}, {6, 7}, {5, 8}, {8, 9},
+                {3, 10}, {10, 11}, {11, 12}, {10, 13}, {13, 14}
+            }
+            
+            local function getPartPos(partName, offset)
+                local part = char:FindFirstChild(partName)
+                if part then
+                    return part.Position + offset
+                end
+                return nil
             end
-        end
-        local diedConn = humanoid.Died:Connect(cleanupSkel)
-        local conn = renderStepped:Connect(function()
-            if not p.Character then
-                for _, line in pairs(lines) do line.Transparency = 1 end
-                return
-            end
-            local humanoidNow = p.Character:FindFirstChild("Humanoid")
-            if not humanoidNow or humanoidNow.Health <= 0 then
-                for _, line in pairs(lines) do line.Transparency = 1 end
-                return
-            end
+            
             local positions = {}
             for _, joint in pairs(joints) do
-                local pos = getPartPosition(p.Character, joint.part, joint.offset)
+                local pos = getPartPos(joint.part, joint.offset)
                 table.insert(positions, pos)
             end
+            
             local screenPositions = {}
             for _, pos in pairs(positions) do
                 if pos then
                     local sp, onScreen = camera:WorldToViewportPoint(pos)
-                    if onScreen and sp.Z > 0 then
+                    if onScreen then
                         table.insert(screenPositions, Vector2.new(sp.X, sp.Y))
                     else
                         table.insert(screenPositions, nil)
@@ -608,176 +609,269 @@ local function updateSkeleton()
                     table.insert(screenPositions, nil)
                 end
             end
-            for i, connIdx in pairs(connections) do
-                local p1 = screenPositions[connIdx[1]]
-                local p2 = screenPositions[connIdx[2]]
+            
+            for i, conn in pairs(connections) do
+                local p1 = screenPositions[conn[1]]
+                local p2 = screenPositions[conn[2]]
                 if p1 and p2 then
-                    lines[i].From = p1
-                    lines[i].To = p2
-                    lines[i].Transparency = 0.7
+                    data.skeletonLines[i].From = p1
+                    data.skeletonLines[i].To = p2
+                    data.skeletonLines[i].Transparency = 0.7
                 else
-                    lines[i].Transparency = 1
+                    data.skeletonLines[i].Transparency = 1
                 end
             end
-        end)
-        skeletonData[p] = {lines = lines, conn = conn, diedConn = diedConn, cleanup = cleanupSkel}
+        end
+        
+        ::continue::
     end
 end
 
 -- ============================================================
---  ОБНОВЛЕНИЕ DISTANCE В РЕАЛЬНОМ ВРЕМЕНИ
+--  ФУНКЦИЯ ВКЛЮЧЕНИЯ/ВЫКЛЮЧЕНИЯ ESP
 -- ============================================================
-renderStepped:Connect(function()
-    if not distEnabled then return end
-    local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-    if not root then return end
-    for p, data in pairs(distData) do
-        if data.billboard and data.billboard.Adornee and data.billboard.Adornee.Parent then
-            local adornee = data.billboard.Adornee
-            local humanoid = adornee.Parent:FindFirstChild("Humanoid")
-            if humanoid and humanoid.Health > 0 then
-                local dist = (root.Position - adornee.Position).Magnitude
-                if data.label then data.label.Text = math.round(dist) .. "m" end
-                data.billboard.Enabled = true
-            else
-                data.billboard.Enabled = false
+local function toggleESP()
+    espEnabled = not espEnabled
+    
+    if espEnabled then
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p ~= player then
+                createPlayerESP(p)
             end
         end
+        updateESP()
+    else
+        clearAllESP()
     end
-end)
+end
 
 -- ============================================================
---  ОБНОВЛЕНИЕ ПРИ ПОЯВЛЕНИИ/УДАЛЕНИИ ИГРОКОВ
+--  ПОДПИСКА НА СОБЫТИЯ ИГРОКОВ
 -- ============================================================
 game.Players.PlayerAdded:Connect(function(p)
-    p.CharacterAdded:Connect(function(character)
-        wait(0.5)
-        if espEnabled then updateESP() end
-        if boxEnabled then updateBoxes() end
-        if distEnabled then updateDist() end
-        if skeletonEnabled then updateSkeleton() end
-        local humanoid = character:WaitForChild("Humanoid")
-        humanoid.Died:Connect(function()
-            if espData[p] then
-                if espData[p].highlight then espData[p].highlight:Destroy() end
-                if espData[p].billboard then espData[p].billboard:Destroy() end
-                espData[p] = nil
+    if p ~= player then
+        p.CharacterAdded:Connect(function()
+            if espEnabled then
+                createPlayerESP(p)
             end
-            if distData[p] then
-                if distData[p].billboard then distData[p].billboard:Destroy() end
-                distData[p] = nil
-            end
-            if boxData[p] and boxData[p].cleanup then boxData[p].cleanup() end
-            if skeletonData[p] and skeletonData[p].cleanup then skeletonData[p].cleanup() end
         end)
-    end)
-    p.CharacterRemoving:Connect(function()
-        if espData[p] then
-            if espData[p].highlight then pcall(function() espData[p].highlight:Destroy() end) end
-            if espData[p].billboard then pcall(function() espData[p].billboard:Destroy() end) end
-            if espData[p].label then pcall(function() espData[p].label:Destroy() end) end
-            espData[p] = nil
+        p.CharacterRemoving:Connect(function()
+            clearPlayerESP(p)
+        end)
+        if espEnabled then
+            createPlayerESP(p)
         end
-        if distData[p] then
-            if distData[p].billboard then pcall(function() distData[p].billboard:Destroy() end) end
-            if distData[p].label then pcall(function() distData[p].label:Destroy() end) end
-            distData[p] = nil
-        end
-        if boxData[p] then
-            if boxData[p].lines then for _, l in pairs(boxData[p].lines) do pcall(function() l:Destroy() end) end end
-            if boxData[p].conn then pcall(function() boxData[p].conn:Disconnect() end) end
-            boxData[p] = nil
-        end
-        if skeletonData[p] then
-            if skeletonData[p].lines then for _, l in pairs(skeletonData[p].lines) do pcall(function() l:Destroy() end) end end
-            if skeletonData[p].conn then pcall(function() skeletonData[p].conn:Disconnect() end) end
-            skeletonData[p] = nil
-        end
-    end)
+    end
 end)
 
 game.Players.PlayerRemoving:Connect(function(p)
-    if espData[p] then
-        if espData[p].highlight then pcall(function() espData[p].highlight:Destroy() end) end
-        if espData[p].billboard then pcall(function() espData[p].billboard:Destroy() end) end
-        if espData[p].label then pcall(function() espData[p].label:Destroy() end) end
-        espData[p] = nil
+    clearPlayerESP(p)
+end)
+
+-- ============================================================
+--  ====== НОВЫЙ БЛОК: AIMBOT ======
+-- ============================================================
+
+local aimbotEnabled = false
+local aimbotTarget = nil
+
+-- Проверка видимости головы (без стен)
+local function isHeadVisible(headPos)
+    local cameraPos = camera.CFrame.Position
+    local direction = (headPos - cameraPos).Unit
+    local distance = (headPos - cameraPos).Magnitude
+    local rayParams = RaycastParams.new()
+    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+    rayParams.FilterDescendantsInstances = {player.Character}
+    local result = workspace:Raycast(cameraPos, direction * distance, rayParams)
+    return result == nil
+end
+
+-- Поиск лучшей цели (враг, живой, видимый, ближайший по углу)
+local function getBestTarget()
+    local bestAngle = math.rad(90)  -- максимальный угол обзора 90°
+    local bestTarget = nil
+    local bestHead = nil
+
+    local myTeam = player.Team
+    if not myTeam then return nil, nil end
+
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player and p.Team ~= myTeam and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+            local head = p.Character.Head
+            local headPos = head.Position
+            local screenPoint, onScreen = camera:WorldToViewportPoint(headPos)
+            if onScreen and screenPoint.Z > 0 then
+                -- проверка видимости
+                if isHeadVisible(headPos) then
+                    -- угол между направлением камеры и вектором на голову
+                    local cameraDir = camera.CFrame.LookVector
+                    local toTarget = (headPos - camera.CFrame.Position).Unit
+                    local angle = math.acos(math.clamp(cameraDir:Dot(toTarget), -1, 1))
+                    if angle < bestAngle then
+                        bestAngle = angle
+                        bestTarget = p
+                        bestHead = headPos
+                    end
+                end
+            end
+        end
     end
-    if boxData[p] then
-        if boxData[p].lines then for _, l in pairs(boxData[p].lines) do pcall(function() l:Destroy() end) end end
-        if boxData[p].conn then pcall(function() boxData[p].conn:Disconnect() end) end
-        boxData[p] = nil
+    return bestTarget, bestHead
+end
+
+-- Непосредственное наведение
+local function doAimbot()
+    local target, headPos = getBestTarget()
+    if target and headPos then
+        camera.CFrame = CFrame.lookAt(camera.CFrame.Position, headPos)
     end
-    if distData[p] then
-        if distData[p].billboard then pcall(function() distData[p].billboard:Destroy() end) end
-        if distData[p].label then pcall(function() distData[p].label:Destroy() end) end
-        distData[p] = nil
+end
+
+-- ============================================================
+--  ОБНОВЛЕНИЕ КАЖДЫЙ КАДР (ESP + AIMBOT)
+-- ============================================================
+renderStepped:Connect(function()
+    if espEnabled then
+        updateESP()
     end
-    if skeletonData[p] then
-        if skeletonData[p].lines then for _, l in pairs(skeletonData[p].lines) do pcall(function() l:Destroy() end) end end
-        if skeletonData[p].conn then pcall(function() skeletonData[p].conn:Disconnect() end) end
-        skeletonData[p] = nil
+    if aimbotEnabled then
+        doAimbot()
     end
 end)
 
 -- ============================================================
---  СОЗДАНИЕ КНОПОК (ГАРАНТИРОВАННО ВИДИМЫ)
+--  КНОПКИ VISUALS
 -- ============================================================
-local espBtn = createSimpleButton("ESP", yPos)
+
+-- ESP
+local espBtn = createButton("ESP", yPos)
 espBtn.MouseButton1Click:Connect(function()
-    espEnabled = not espEnabled
+    toggleESP()
     espBtn.Text = espEnabled and "☑ ESP" or "☐ ESP"
-    updateESP()
 end)
 yPos = yPos + spacing
 
-local boxBtn = createSimpleButton("3D Box", yPos)
-boxBtn.MouseButton1Click:Connect(function()
+-- 3D BOX (включает/выключает отображение бокса)
+local boxEnabled = false
+local function toggleBox()
     boxEnabled = not boxEnabled
+    for p, data in pairs(espData) do
+        if data.boxLines then
+            for _, line in pairs(data.boxLines) do
+                if boxEnabled then
+                    line.Transparency = 0.5
+                else
+                    line.Transparency = 1
+                end
+            end
+        end
+    end
+end
+
+local boxBtn = createButton("3D Box", yPos)
+boxBtn.MouseButton1Click:Connect(function()
+    toggleBox()
     boxBtn.Text = boxEnabled and "☑ 3D Box" or "☐ 3D Box"
-    updateBoxes()
 end)
 yPos = yPos + spacing
 
-local distBtn = createSimpleButton("Distance", yPos)
-distBtn.MouseButton1Click:Connect(function()
+-- DISTANCE (включает/выключает отображение дистанции)
+local distEnabled = false
+local function toggleDist()
     distEnabled = not distEnabled
+    for p, data in pairs(espData) do
+        if data.distBillboard then
+            data.distBillboard.Enabled = distEnabled
+        end
+    end
+end
+
+local distBtn = createButton("Distance", yPos)
+distBtn.MouseButton1Click:Connect(function()
+    toggleDist()
     distBtn.Text = distEnabled and "☑ Distance" or "☐ Distance"
-    updateDist()
 end)
 yPos = yPos + spacing
 
-local skeletonBtn = createSimpleButton("Skeleton", yPos)
-skeletonBtn.MouseButton1Click:Connect(function()
+-- SKELETON (включает/выключает отображение скелета)
+local skeletonEnabled = false
+local function toggleSkeleton()
     skeletonEnabled = not skeletonEnabled
+    for p, data in pairs(espData) do
+        if data.skeletonLines then
+            for _, line in pairs(data.skeletonLines) do
+                if skeletonEnabled then
+                    line.Transparency = 0.7
+                else
+                    line.Transparency = 1
+                end
+            end
+        end
+    end
+end
+
+local skeletonBtn = createButton("Skeleton", yPos)
+skeletonBtn.MouseButton1Click:Connect(function()
+    toggleSkeleton()
     skeletonBtn.Text = skeletonEnabled and "☑ Skeleton" or "☐ Skeleton"
-    updateSkeleton()
 end)
 yPos = yPos + spacing
 
-print("✅ Все кнопки созданы и добавлены в контейнер.")
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, yPos + 50)
 
 -- ============================================================
---  AIMBOT (ЗАГЛУШКА)
+--  AIMBOT (НОВАЯ ВКЛАДКА)
 -- ============================================================
 local aimbotContent = contentFrames[2]
-for _, child in pairs(aimbotContent:GetChildren()) do child:Destroy() end
-local aimbotLabel = Instance.new("TextLabel")
-aimbotLabel.Size = UDim2.new(1, 0, 1, 0)
-aimbotLabel.BackgroundTransparency = 1
-aimbotLabel.Text = "AIMBOT\n\n(coming soon...)"
-aimbotLabel.TextColor3 = Color3.fromRGB(180, 180, 190)
-aimbotLabel.TextSize = 20
-aimbotLabel.Font = Enum.Font.GothamLight
-aimbotLabel.TextXAlignment = Enum.TextXAlignment.Center
-aimbotLabel.TextYAlignment = Enum.TextYAlignment.Center
-aimbotLabel.Parent = aimbotContent
+for _, child in pairs(aimbotContent:GetChildren()) do
+    child:Destroy()
+end
+
+-- Создаём контейнер для кнопок
+local aimbotScroll = Instance.new("ScrollingFrame")
+aimbotScroll.Size = UDim2.new(1, 0, 1, 0)
+aimbotScroll.BackgroundTransparency = 1
+aimbotScroll.BorderSizePixel = 0
+aimbotScroll.CanvasSize = UDim2.new(0, 0, 0, 100)
+aimbotScroll.ScrollBarThickness = 4
+aimbotScroll.ScrollBarImageColor3 = Color3.fromRGB(200, 50, 50)
+aimbotScroll.Parent = aimbotContent
+
+local aimbotPadding = Instance.new("UIPadding")
+aimbotPadding.PaddingLeft = UDim.new(0, 10)
+aimbotPadding.PaddingTop = UDim.new(0, 10)
+aimbotPadding.Parent = aimbotScroll
+
+-- Кнопка включения
+local aimbotBtn = Instance.new("TextButton")
+aimbotBtn.Size = UDim2.new(0, 220, 0, 38)
+aimbotBtn.Position = UDim2.new(0, 0, 0, 0)
+aimbotBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+aimbotBtn.BackgroundTransparency = 0.3
+aimbotBtn.Text = "☐ Enable Aimbot"
+aimbotBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+aimbotBtn.TextSize = 16
+aimbotBtn.Font = Enum.Font.SourceSansBold
+aimbotBtn.TextXAlignment = Enum.TextXAlignment.Left
+aimbotBtn.Parent = aimbotScroll
+
+local cornersBtn = Instance.new("UICorner")
+cornersBtn.CornerRadius = UDim.new(0, 8)
+cornersBtn.Parent = aimbotBtn
+
+aimbotBtn.MouseButton1Click:Connect(function()
+    aimbotEnabled = not aimbotEnabled
+    aimbotBtn.Text = aimbotEnabled and "☑ Enable Aimbot" or "☐ Enable Aimbot"
+end)
 
 -- ============================================================
 --  SETTINGS (ЗАГЛУШКА)
 -- ============================================================
 local settingsContent = contentFrames[3]
-for _, child in pairs(settingsContent:GetChildren()) do child:Destroy() end
+for _, child in pairs(settingsContent:GetChildren()) do
+    child:Destroy()
+end
 local settingsLabel = Instance.new("TextLabel")
 settingsLabel.Size = UDim2.new(1, 0, 1, 0)
 settingsLabel.BackgroundTransparency = 1
@@ -805,3 +899,5 @@ watermark.Parent = frame
 
 print("✅ Letunium Hub загружен успешно!")
 print("🔑 Нажми на панель Letunium Opening чтобы открыть/закрыть")
+print("🎯 Aimbot доступен во вкладке AIMBOT")
+print("✅ ESP обновляется каждый кадр и удаляется при смерти")
