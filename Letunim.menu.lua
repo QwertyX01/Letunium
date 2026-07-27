@@ -1,13 +1,13 @@
 -- ============================================================
---  LETUNIUM HUB (ИСПРАВЛЕННАЯ СИСТЕМА ESP + AIMBOT)
+--  INK HUB (БАЗОВОЕ МЕНЮ ДЛЯ INK GAME)
 --  by Tormentor412
 -- ============================================================
 
-print("🚀 Загрузка Letunium Hub...")
+print("🚀 Загрузка Ink Hub...")
 
 local player = game:GetService("Players").LocalPlayer
 local gui = Instance.new("ScreenGui")
-gui.Name = "LetuniumHub"
+gui.Name = "InkHub"
 gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
@@ -17,7 +17,7 @@ gui.Parent = player:WaitForChild("PlayerGui")
 local hello = Instance.new("TextLabel")
 hello.Size = UDim2.new(1, 0, 1, 0)
 hello.BackgroundTransparency = 1
-hello.Text = "HELLO"
+hello.Text = "INK HUB"
 hello.TextColor3 = Color3.fromRGB(255, 215, 0)
 hello.TextScaled = true
 hello.Font = Enum.Font.GothamBold
@@ -59,7 +59,7 @@ local logoLetter = Instance.new("TextLabel")
 logoLetter.Size = UDim2.new(0, 40, 0, 40)
 logoLetter.Position = UDim2.new(0.02, 0, 0.5, -20)
 logoLetter.BackgroundTransparency = 1
-logoLetter.Text = "L"
+logoLetter.Text = "I"
 logoLetter.TextColor3 = Color3.fromRGB(255, 255, 255)
 logoLetter.TextSize = 38
 logoLetter.Font = Enum.Font.GothamBold
@@ -72,7 +72,7 @@ local title = Instance.new("TextLabel")
 title.Size = UDim2.new(0.5, 0, 1, 0)
 title.Position = UDim2.new(0.08, 0, 0, 0)
 title.BackgroundTransparency = 1
-title.Text = "Letunium"
+title.Text = "Ink Hub"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextSize = 22
 title.Font = Enum.Font.GothamMedium
@@ -101,7 +101,7 @@ local infoTitle = Instance.new("TextLabel")
 infoTitle.Size = UDim2.new(0.6, 0, 1, 0)
 infoTitle.Position = UDim2.new(0.05, 0, 0, 0)
 infoTitle.BackgroundTransparency = 1
-infoTitle.Text = "Letunium"
+infoTitle.Text = "Ink Hub"
 infoTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 infoTitle.TextSize = 16
 infoTitle.Font = Enum.Font.GothamBold
@@ -234,7 +234,7 @@ bottomBar.Parent = frame
 -- ============================================================
 --  ВКЛАДКИ
 -- ============================================================
-local tabNames = {"VISUALS", "AIMBOT", "SETTINGS"}
+local tabNames = {"VISUALS", "AUTO", "MISC"}
 local tabButtons = {}
 local contentFrames = {}
 local underlines = {}
@@ -296,625 +296,149 @@ end
 tabButtons[1].TextColor3 = Color3.fromRGB(255, 255, 255)
 
 -- ============================================================
---  VISUALS
+--  ВКЛАДКА VISUALS (ПУСТАЯ)
 -- ============================================================
 local visualsContent = contentFrames[1]
-
 for _, child in pairs(visualsContent:GetChildren()) do
     child:Destroy()
 end
 
-local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Size = UDim2.new(1, 0, 1, 0)
-scrollFrame.BackgroundTransparency = 1
-scrollFrame.BorderSizePixel = 0
-scrollFrame.CanvasSize = UDim2.new(0, 0, 2, 0)
-scrollFrame.ScrollBarThickness = 4
-scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(200, 50, 50)
-scrollFrame.Parent = visualsContent
-
-local scrollPadding = Instance.new("UIPadding")
-scrollPadding.PaddingLeft = UDim.new(0, 10)
-scrollPadding.PaddingTop = UDim.new(0, 10)
-scrollPadding.Parent = scrollFrame
-
-local yPos = 0
-local spacing = 42
+local visualsLabel = Instance.new("TextLabel")
+visualsLabel.Size = UDim2.new(1, 0, 1, 0)
+visualsLabel.BackgroundTransparency = 1
+visualsLabel.Text = "VISUALS\n\n(функции будут здесь)"
+visualsLabel.TextColor3 = Color3.fromRGB(180, 180, 190)
+visualsLabel.TextSize = 20
+visualsLabel.Font = Enum.Font.GothamLight
+visualsLabel.TextXAlignment = Enum.TextXAlignment.Center
+visualsLabel.TextYAlignment = Enum.TextYAlignment.Center
+visualsLabel.Parent = visualsContent
 
 -- ============================================================
---  ФУНКЦИЯ СОЗДАНИЯ КНОПКИ
+--  ВКЛАДКА AUTO (ПУСТАЯ)
 -- ============================================================
-local function createButton(text, y)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 220, 0, 38)
-    btn.Position = UDim2.new(0, 0, 0, y)
-    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-    btn.BackgroundTransparency = 0.3
-    btn.Text = "☐ " .. text
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 16
-    btn.Font = Enum.Font.SourceSansBold
-    btn.TextXAlignment = Enum.TextXAlignment.Left
-    btn.Parent = scrollFrame
-    local corners = Instance.new("UICorner")
-    corners.CornerRadius = UDim.new(0, 8)
-    corners.Parent = btn
-    return btn
-end
-
--- ============================================================
---  СИСТЕМА ESP (ИСПРАВЛЕННАЯ)
--- ============================================================
-local espEnabled = false
-local espData = {}  -- { [Player] = { highlight, billboard, label, boxLines, skeletonLines, distBillboard, distLabel } }
-
-local espBoxColor = Color3.fromRGB(255, 0, 0)
-local espSkeletonColor = Color3.fromRGB(0, 255, 0)
-local hasDrawing = pcall(function() return Drawing end) and Drawing ~= nil
-local camera = workspace.CurrentCamera
-local renderStepped = game:GetService("RunService").RenderStepped
-
--- ============================================================
---  ОЧИСТКА ESP ДЛЯ ОДНОГО ИГРОКА
--- ============================================================
-local function clearPlayerESP(p)
-    local data = espData[p]
-    if not data then return end
-    
-    if data.highlight then pcall(function() data.highlight:Destroy() end) end
-    if data.billboard then pcall(function() data.billboard:Destroy() end) end
-    if data.label then pcall(function() data.label:Destroy() end) end
-    
-    if data.boxLines then
-        for _, line in pairs(data.boxLines) do
-            pcall(function() line:Remove() end)
-        end
-    end
-    
-    if data.skeletonLines then
-        for _, line in pairs(data.skeletonLines) do
-            pcall(function() line:Remove() end)
-        end
-    end
-    
-    if data.distBillboard then pcall(function() data.distBillboard:Destroy() end) end
-    if data.distLabel then pcall(function() data.distLabel:Destroy() end) end
-    
-    espData[p] = nil
-end
-
--- ============================================================
---  ОЧИСТКА ВСЕГО ESP
--- ============================================================
-local function clearAllESP()
-    for p, _ in pairs(espData) do
-        clearPlayerESP(p)
-    end
-    espData = {}
-end
-
--- ============================================================
---  СОЗДАНИЕ ESP ДЛЯ ИГРОКА (ОДИН РАЗ)
--- ============================================================
-local function createPlayerESP(p)
-    if p == player then return end
-    if espData[p] then clearPlayerESP(p) end
-    
-    local data = {}
-    
-    -- HIGHLIGHT
-    local highlight = Instance.new("Highlight")
-    highlight.FillColor = Color3.fromRGB(255, 0, 0)
-    highlight.FillTransparency = 0.4
-    highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
-    highlight.OutlineTransparency = 0.2
-    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    data.highlight = highlight
-    
-    -- BILLBOARD (имя)
-    local billboard = Instance.new("BillboardGui")
-    billboard.Size = UDim2.new(0, 150, 0, 30)
-    billboard.StudsOffset = Vector3.new(0, 2.5, 0)
-    billboard.AlwaysOnTop = true
-    data.billboard = billboard
-    
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.Text = p.Name
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.TextSize = 14
-    label.Font = Enum.Font.GothamBold
-    label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-    label.TextStrokeTransparency = 0.3
-    label.Parent = billboard
-    data.label = label
-    
-    -- 3D BOX
-    if hasDrawing then
-        local boxLines = {}
-        for i = 1, 12 do
-            local line = Drawing.new("Line")
-            line.Color = espBoxColor
-            line.Thickness = 2
-            line.Transparency = 1
-            table.insert(boxLines, line)
-        end
-        data.boxLines = boxLines
-        
-        -- SKELETON
-        local skeletonLines = {}
-        for i = 1, 13 do
-            local line = Drawing.new("Line")
-            line.Color = espSkeletonColor
-            line.Thickness = 2
-            line.Transparency = 1
-            table.insert(skeletonLines, line)
-        end
-        data.skeletonLines = skeletonLines
-    end
-    
-    -- DISTANCE
-    local distBillboard = Instance.new("BillboardGui")
-    distBillboard.Size = UDim2.new(0, 100, 0, 25)
-    distBillboard.StudsOffset = Vector3.new(0, 2, 0)
-    distBillboard.AlwaysOnTop = true
-    data.distBillboard = distBillboard
-    
-    local distLabel = Instance.new("TextLabel")
-    distLabel.Size = UDim2.new(1, 0, 1, 0)
-    distLabel.BackgroundTransparency = 1
-    distLabel.Text = "0m"
-    distLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
-    distLabel.TextSize = 14
-    distLabel.Font = Enum.Font.GothamBold
-    distLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-    distLabel.TextStrokeTransparency = 0.3
-    distLabel.Parent = distBillboard
-    data.distLabel = distLabel
-    
-    espData[p] = data
-end
-
--- ============================================================
---  ОБНОВЛЕНИЕ ESP (ВЫЗЫВАЕТСЯ КАЖДЫЙ КАДР)
--- ============================================================
-local function updateESP()
-    local myRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-    local myPos = myRoot and myRoot.Position or Vector3.new(0, 0, 0)
-    
-    for p, data in pairs(espData) do
-        local char = p.Character
-        local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        local humanoid = char and char:FindFirstChild("Humanoid")
-        local head = char and char:FindFirstChild("Head")
-        
-        -- ПРОВЕРКА: жив ли игрок и видим ли
-        local isValid = char and hrp and humanoid and humanoid.Health > 0 and head
-        
-        if not isValid then
-            -- Игрок мёртв или не загружен — скрываем всё
-            if data.highlight then data.highlight.Adornee = nil end
-            if data.billboard then data.billboard.Adornee = nil end
-            if data.distBillboard then data.distBillboard.Adornee = nil end
-            if data.boxLines then
-                for _, line in pairs(data.boxLines) do
-                    line.Transparency = 1
-                end
-            end
-            if data.skeletonLines then
-                for _, line in pairs(data.skeletonLines) do
-                    line.Transparency = 1
-                end
-            end
-            goto continue
-        end
-        
-        -- ОБНОВЛЯЕМ HIGHLIGHT
-        if data.highlight then
-            data.highlight.Adornee = char
-            data.highlight.Enabled = true
-        end
-        
-        -- ОБНОВЛЯЕМ BILLBOARD (имя)
-        if data.billboard then
-            data.billboard.Adornee = head
-            data.billboard.Enabled = true
-        end
-        
-        -- ОБНОВЛЯЕМ DISTANCE
-        if data.distBillboard then
-            data.distBillboard.Adornee = head
-            data.distBillboard.Enabled = true
-            if data.distLabel then
-                local dist = (myPos - hrp.Position).Magnitude
-                data.distLabel.Text = math.round(dist) .. "m"
-            end
-        end
-        
-        -- ОБНОВЛЯЕМ 3D BOX
-        if data.boxLines and hasDrawing then
-            local w, h, d = 2.5, 4.5, 1.5
-            local corners = {
-                Vector3.new(-w, -h, -d), Vector3.new(w, -h, -d), Vector3.new(w, -h, d), Vector3.new(-w, -h, d),
-                Vector3.new(-w, h, -d), Vector3.new(w, h, -d), Vector3.new(w, h, d), Vector3.new(-w, h, d)
-            }
-            local edges = {{1,2},{2,3},{3,4},{4,1},{5,6},{6,7},{7,8},{8,5},{1,5},{2,6},{3,7},{4,8}}
-            
-            local screenCorners = {}
-            for _, corner in pairs(corners) do
-                local worldPos = hrp.CFrame:PointToWorldSpace(corner)
-                local sp, onScreen = camera:WorldToViewportPoint(worldPos)
-                table.insert(screenCorners, {pos = Vector2.new(sp.X, sp.Y), on = onScreen})
-            end
-            
-            for i, edge in pairs(edges) do
-                if screenCorners[edge[1]].on and screenCorners[edge[2]].on then
-                    data.boxLines[i].From = screenCorners[edge[1]].pos
-                    data.boxLines[i].To = screenCorners[edge[2]].pos
-                    data.boxLines[i].Transparency = 0.5
-                else
-                    data.boxLines[i].Transparency = 1
-                end
-            end
-        end
-        
-        -- ОБНОВЛЯЕМ SKELETON
-        if data.skeletonLines and hasDrawing then
-            local joints = {
-                {part = "Head", offset = Vector3.new(0, 0, 0)},
-                {part = "UpperTorso", offset = Vector3.new(0, 0, 0)},
-                {part = "UpperTorso", offset = Vector3.new(0, 1.5, 0)},
-                {part = "UpperTorso", offset = Vector3.new(1.5, 0.5, 0)},
-                {part = "UpperTorso", offset = Vector3.new(-1.5, 0.5, 0)},
-                {part = "RightUpperArm", offset = Vector3.new(0, 0, 0)},
-                {part = "RightLowerArm", offset = Vector3.new(0, 0, 0)},
-                {part = "LeftUpperArm", offset = Vector3.new(0, 0, 0)},
-                {part = "LeftLowerArm", offset = Vector3.new(0, 0, 0)},
-                {part = "UpperTorso", offset = Vector3.new(0, -2, 0)},
-                {part = "RightUpperLeg", offset = Vector3.new(0, 0, 0)},
-                {part = "RightLowerLeg", offset = Vector3.new(0, 0, 0)},
-                {part = "LeftUpperLeg", offset = Vector3.new(0, 0, 0)},
-                {part = "LeftLowerLeg", offset = Vector3.new(0, 0, 0)}
-            }
-            local connections = {
-                {1, 2}, {2, 3}, {3, 4}, {3, 5}, {4, 6}, {6, 7}, {5, 8}, {8, 9},
-                {3, 10}, {10, 11}, {11, 12}, {10, 13}, {13, 14}
-            }
-            
-            local function getPartPos(partName, offset)
-                local part = char:FindFirstChild(partName)
-                if part then
-                    return part.Position + offset
-                end
-                return nil
-            end
-            
-            local positions = {}
-            for _, joint in pairs(joints) do
-                local pos = getPartPos(joint.part, joint.offset)
-                table.insert(positions, pos)
-            end
-            
-            local screenPositions = {}
-            for _, pos in pairs(positions) do
-                if pos then
-                    local sp, onScreen = camera:WorldToViewportPoint(pos)
-                    if onScreen then
-                        table.insert(screenPositions, Vector2.new(sp.X, sp.Y))
-                    else
-                        table.insert(screenPositions, nil)
-                    end
-                else
-                    table.insert(screenPositions, nil)
-                end
-            end
-            
-            for i, conn in pairs(connections) do
-                local p1 = screenPositions[conn[1]]
-                local p2 = screenPositions[conn[2]]
-                if p1 and p2 then
-                    data.skeletonLines[i].From = p1
-                    data.skeletonLines[i].To = p2
-                    data.skeletonLines[i].Transparency = 0.7
-                else
-                    data.skeletonLines[i].Transparency = 1
-                end
-            end
-        end
-        
-        ::continue::
-    end
-end
-
--- ============================================================
---  ФУНКЦИЯ ВКЛЮЧЕНИЯ/ВЫКЛЮЧЕНИЯ ESP
--- ============================================================
-local function toggleESP()
-    espEnabled = not espEnabled
-    
-    if espEnabled then
-        for _, p in pairs(game.Players:GetPlayers()) do
-            if p ~= player then
-                createPlayerESP(p)
-            end
-        end
-        updateESP()
-    else
-        clearAllESP()
-    end
-end
-
--- ============================================================
---  ПОДПИСКА НА СОБЫТИЯ ИГРОКОВ
--- ============================================================
-game.Players.PlayerAdded:Connect(function(p)
-    if p ~= player then
-        p.CharacterAdded:Connect(function()
-            if espEnabled then
-                createPlayerESP(p)
-            end
-        end)
-        p.CharacterRemoving:Connect(function()
-            clearPlayerESP(p)
-        end)
-        if espEnabled then
-            createPlayerESP(p)
-        end
-    end
-end)
-
-game.Players.PlayerRemoving:Connect(function(p)
-    clearPlayerESP(p)
-end)
-
--- ============================================================
---  ОБНОВЛЕНИЕ КАЖДЫЙ КАДР
--- ============================================================
-renderStepped:Connect(function()
-    if espEnabled then
-        updateESP()
-    end
-end)
-
--- ============================================================
---  КНОПКИ VISUALS
--- ============================================================
-
--- ESP
-local espBtn = createButton("ESP", yPos)
-espBtn.MouseButton1Click:Connect(function()
-    toggleESP()
-    espBtn.Text = espEnabled and "☑ ESP" or "☐ ESP"
-end)
-yPos = yPos + spacing
-
--- 3D BOX (включает/выключает отображение бокса)
-local boxEnabled = false
-local function toggleBox()
-    boxEnabled = not boxEnabled
-    for p, data in pairs(espData) do
-        if data.boxLines then
-            for _, line in pairs(data.boxLines) do
-                if boxEnabled then
-                    line.Transparency = 0.5
-                else
-                    line.Transparency = 1
-                end
-            end
-        end
-    end
-end
-
-local boxBtn = createButton("3D Box", yPos)
-boxBtn.MouseButton1Click:Connect(function()
-    toggleBox()
-    boxBtn.Text = boxEnabled and "☑ 3D Box" or "☐ 3D Box"
-end)
-yPos = yPos + spacing
-
--- DISTANCE (включает/выключает отображение дистанции)
-local distEnabled = false
-local function toggleDist()
-    distEnabled = not distEnabled
-    for p, data in pairs(espData) do
-        if data.distBillboard then
-            data.distBillboard.Enabled = distEnabled
-        end
-    end
-end
-
-local distBtn = createButton("Distance", yPos)
-distBtn.MouseButton1Click:Connect(function()
-    toggleDist()
-    distBtn.Text = distEnabled and "☑ Distance" or "☐ Distance"
-end)
-yPos = yPos + spacing
-
--- SKELETON (включает/выключает отображение скелета)
-local skeletonEnabled = false
-local function toggleSkeleton()
-    skeletonEnabled = not skeletonEnabled
-    for p, data in pairs(espData) do
-        if data.skeletonLines then
-            for _, line in pairs(data.skeletonLines) do
-                if skeletonEnabled then
-                    line.Transparency = 0.7
-                else
-                    line.Transparency = 1
-                end
-            end
-        end
-    end
-end
-
-local skeletonBtn = createButton("Skeleton", yPos)
-skeletonBtn.MouseButton1Click:Connect(function()
-    toggleSkeleton()
-    skeletonBtn.Text = skeletonEnabled and "☑ Skeleton" or "☐ Skeleton"
-end)
-yPos = yPos + spacing
-
-scrollFrame.CanvasSize = UDim2.new(0, 0, 0, yPos + 50)
-
--- ============================================================
---  AIMBOT (ИСПРАВЛЕННАЯ ВЕРСИЯ)
--- ============================================================
-local aimbotContent = contentFrames[2]
-for _, child in pairs(aimbotContent:GetChildren()) do
+local autoContent = contentFrames[2]
+for _, child in pairs(autoContent:GetChildren()) do
     child:Destroy()
 end
 
-local aimbotEnabled = false
-local aimbotConnection = nil
+local autoLabel = Instance.new("TextLabel")
+autoLabel.Size = UDim2.new(1, 0, 1, 0)
+autoLabel.BackgroundTransparency = 1
+autoLabel.Text = "AUTO\n\n(функции будут здесь)"
+autoLabel.TextColor3 = Color3.fromRGB(180, 180, 190)
+autoLabel.TextSize = 20
+autoLabel.Font = Enum.Font.GothamLight
+autoLabel.TextXAlignment = Enum.TextXAlignment.Center
+autoLabel.TextYAlignment = Enum.TextYAlignment.Center
+autoLabel.Parent = autoContent
 
--- Кнопка Aimbot
-local aimbotBtn = Instance.new("TextButton")
-aimbotBtn.Size = UDim2.new(0, 220, 0, 38)
-aimbotBtn.Position = UDim2.new(0, 10, 0.1, 0)
-aimbotBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-aimbotBtn.BackgroundTransparency = 0.3
-aimbotBtn.Text = "☐ Aimbot"
-aimbotBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-aimbotBtn.TextSize = 16
-aimbotBtn.Font = Enum.Font.SourceSansBold
-aimbotBtn.TextXAlignment = Enum.TextXAlignment.Left
-aimbotBtn.Parent = aimbotContent
-local aimbotCorners = Instance.new("UICorner")
-aimbotCorners.CornerRadius = UDim.new(0, 8)
-aimbotCorners.Parent = aimbotBtn
-
--- Функция поиска цели (враг, видим, голова)
-local function findTarget()
-    local myTeam = player:FindFirstChild("Team")
-    local bestTarget = nil
-    local bestAngle = math.rad(90) -- максимальный угол 90 градусов
-    
-    local cam = workspace.CurrentCamera
-    local camPos = cam.CFrame.Position
-    local camLook = cam.CFrame.LookVector
-    
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p == player then goto continue end
-        if not p.Character then goto continue end
-        local head = p.Character:FindFirstChild("Head")
-        if not head then goto continue end
-        
-        local humanoid = p.Character:FindFirstChild("Humanoid")
-        if not humanoid or humanoid.Health <= 0 then goto continue end
-        
-        -- Проверка команды (если есть)
-        local pTeam = p:FindFirstChild("Team")
-        if myTeam and pTeam then
-            if pTeam == myTeam then -- сравниваем объекты Team
-                goto continue -- союзник
-            end
-        end
-        
-        -- Проверка видимости (Line of Sight)
-        local headPos = head.Position
-        local screenPos, onScreen = cam:WorldToViewportPoint(headPos)
-        if not onScreen then goto continue end
-        
-        -- Raycast
-        local raycastParams = RaycastParams.new()
-        raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-        raycastParams.FilterDescendantsInstances = {player.Character, p.Character}
-        local direction = (headPos - camPos).Unit
-        local distance = (headPos - camPos).Magnitude
-        local rayResult = workspace:Raycast(camPos, direction * distance, raycastParams)
-        
-        -- Если луч попал не в игрока – значит не видим
-        if rayResult then
-            local hitInstance = rayResult.Instance
-            if not hitInstance or not hitInstance:IsDescendantOf(p.Character) then
-                goto continue -- за стеной
-            end
-        else
-            -- если rayResult nil – значит ничего не мешает, видим
-        end
-        
-        -- Угол между направлением камеры и направлением на голову
-        local dirToTarget = (headPos - camPos).Unit
-        local angle = math.acos(math.clamp(camLook:Dot(dirToTarget), -1, 1))
-        if angle < bestAngle then
-            bestAngle = angle
-            bestTarget = p
-        end
-        
-        ::continue::
-    end
-    
-    return bestTarget
+-- ============================================================
+--  ВКЛАДКА MISC (ПУСТАЯ)
+-- ============================================================
+local miscContent = contentFrames[3]
+for _, child in pairs(miscContent:GetChildren()) do
+    child:Destroy()
 end
 
--- Обновление Aimbot (вызывается в RenderStepped)
-local function updateAimbot()
-    if not aimbotEnabled then
-        if aimbotConnection then
-            aimbotConnection:Disconnect()
-            aimbotConnection = nil
-        end
-        return
-    end
-    if aimbotConnection then return end -- уже есть
-    
-    aimbotConnection = game:GetService("RunService").RenderStepped:Connect(function()
-        if not aimbotEnabled then return end
-        local target = findTarget()
-        if target then
-            local head = target.Character.Head
-            local cam = workspace.CurrentCamera
-            local camPos = cam.CFrame.Position
-            local lookAt = (head.Position - camPos).Unit
-            cam.CFrame = CFrame.new(camPos, camPos + lookAt)
-        end
-    end)
-end
+local miscLabel = Instance.new("TextLabel")
+miscLabel.Size = UDim2.new(1, 0, 1, 0)
+miscLabel.BackgroundTransparency = 1
+miscLabel.Text = "MISC\n\n(функции будут здесь)"
+miscLabel.TextColor3 = Color3.fromRGB(180, 180, 190)
+miscLabel.TextSize = 20
+miscLabel.Font = Enum.Font.GothamLight
+miscLabel.TextXAlignment = Enum.TextXAlignment.Center
+miscLabel.TextYAlignment = Enum.TextYAlignment.Center
+miscLabel.Parent = miscContent
 
--- Переключение Aimbot
-aimbotBtn.MouseButton1Click:Connect(function()
-    aimbotEnabled = not aimbotEnabled
-    aimbotBtn.Text = aimbotEnabled and "☑ Aimbot" or "☐ Aimbot"
-    if aimbotEnabled then
-        print("🔫 Aimbot включен")
-        updateAimbot()
-    else
-        print("🔫 Aimbot выключен")
-        if aimbotConnection then
-            aimbotConnection:Disconnect()
-            aimbotConnection = nil
+-- ============================================================
+--  КНОПКА W (ДЛЯ ОТКРЫТИЯ МЕНЮ, КОГДА ОНО ЗАКРЫТО)
+-- ============================================================
+local mButton = Instance.new("TextButton")
+mButton.Size = UDim2.new(0, 55, 0, 55)
+mButton.Position = UDim2.new(1, -70, 1, -70)
+mButton.BackgroundColor3 = Color3.fromRGB(200, 30, 30)
+mButton.BackgroundTransparency = 0.1
+mButton.Text = "I"
+mButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+mButton.TextSize = 28
+mButton.Font = Enum.Font.GothamBold
+mButton.Visible = false
+mButton.Parent = gui
+
+local mCorners = Instance.new("UICorner")
+mCorners.CornerRadius = UDim.new(1, 0)
+mCorners.Parent = mButton
+
+local mStroke = Instance.new("UIStroke")
+mStroke.Thickness = 2
+mStroke.Color = Color3.fromRGB(255, 255, 255)
+mStroke.Transparency = 0.3
+mStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+mStroke.Parent = mButton
+
+mButton.MouseButton1Click:Connect(function()
+    frame.Visible = true
+    mButton.Visible = false
+end)
+
+-- ============================================================
+--  ПЕРЕТАСКИВАНИЕ ОКНА
+-- ============================================================
+local dragging = false
+local dragStart
+local startPos
+
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        local pos = input.Position
+        if pos.X >= frame.AbsolutePosition.X and pos.X <= frame.AbsolutePosition.X + frame.AbsoluteSize.X and
+           pos.Y >= frame.AbsolutePosition.Y and pos.Y <= frame.AbsolutePosition.Y + 55 then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
         end
     end
 end)
 
--- Если меню закрывается, можно отключать aimbot (опционально)
+frame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- ============================================================
+--  F1 (ОТКРЫТИЕ/ЗАКРЫТИЕ)
+-- ============================================================
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.F1 then
+        if frame then
+            frame.Visible = not frame.Visible
+            if frame.Visible then
+                mButton.Visible = false
+            else
+                mButton.Visible = true
+            end
+        end
+    end
+end)
+
 frame:GetPropertyChangedSignal("Visible"):Connect(function()
-    if not frame.Visible and aimbotEnabled then
-        -- Опционально: отключать aimbot при закрытии меню
-        -- aimbotEnabled = false
-        -- aimbotBtn.Text = "☐ Aimbot"
-        -- if aimbotConnection then aimbotConnection:Disconnect() aimbotConnection = nil end
+    if not frame.Visible then
+        mButton.Visible = true
+    else
+        mButton.Visible = false
     end
 end)
-
--- ============================================================
---  SETTINGS (ЗАГЛУШКА)
--- ============================================================
-local settingsContent = contentFrames[3]
-for _, child in pairs(settingsContent:GetChildren()) do
-    child:Destroy()
-end
-local settingsLabel = Instance.new("TextLabel")
-settingsLabel.Size = UDim2.new(1, 0, 1, 0)
-settingsLabel.BackgroundTransparency = 1
-settingsLabel.Text = "SETTINGS\n\n(coming soon...)"
-settingsLabel.TextColor3 = Color3.fromRGB(180, 180, 190)
-settingsLabel.TextSize = 20
-settingsLabel.Font = Enum.Font.GothamLight
-settingsLabel.TextXAlignment = Enum.TextXAlignment.Center
-settingsLabel.TextYAlignment = Enum.TextYAlignment.Center
-settingsLabel.Parent = settingsContent
 
 -- ============================================================
 --  ВОДЯНОЙ ЗНАК
@@ -923,15 +447,13 @@ local watermark = Instance.new("TextLabel")
 watermark.Size = UDim2.new(1, 0, 0, 20)
 watermark.Position = UDim2.new(0, 0, 0.88, 0)
 watermark.BackgroundTransparency = 1
-watermark.Text = "LETUNIUM HUB | TORMENTOR412"
+watermark.Text = "INK HUB | TORMENTOR412"
 watermark.TextColor3 = Color3.fromRGB(255, 255, 255)
 watermark.TextSize = 12
 watermark.Font = Enum.Font.SourceSans
 watermark.TextTransparency = 0.6
 watermark.Parent = frame
 
-print("✅ Letunium Hub загружен успешно!")
-print("🔑 Нажми на панель Letunium Opening чтобы открыть/закрыть")
-print("🎨 VISUALS: ESP, 3D Box, Distance, Skeleton")
-print("🎯 AIMBOT: Aimbot (только враги, голова, видимость)")
-print("✅ ESP обновляется каждый кадр и удаляется при смерти")
+print("✅ Ink Hub загружен успешно!")
+print("🔑 F1 - открыть/закрыть")
+print("📁 Вкладки: VISUALS, AUTO, MISC")
