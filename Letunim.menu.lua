@@ -2,7 +2,7 @@
 --  Aqwarium HUB (Minimal, thin, no close buttons)
 --  Tabs: Games | Player | Misc | Combat
 --  Footer: script By | tormentor412
---  Only header line and footer lines (no internal lines)
+--  With LOGO in top-left corner (60x60)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -11,7 +11,71 @@ gui.Name = "AqwariumHub"
 gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
--- MAIN WINDOW
+-- ============================================================
+--  ЗАГРУЗКА И ОТОБРАЖЕНИЕ ЛОГОТИПА
+-- ============================================================
+local imageUrl = "https://i.imgur.com/ВАШ_КОД.png"   -- <--- ЗАМЕНИТЕ НА СВОЮ ССЫЛКУ
+local fileName = "menu_logo.png"
+local filePath = fileName
+
+-- Функция проверки существования файла (упрощённо)
+local function fileExists(path)
+    local success, result = pcall(function()
+        return loadfile(path)
+    end)
+    return success and result ~= nil
+end
+
+local logoContent = nil
+if not fileExists(filePath) then
+    print("📥 Скачиваем логотип...")
+    local success, content = pcall(function()
+        return game:HttpGet(imageUrl, true)
+    end)
+    if success and content then
+        logoContent = content
+        local writeSuccess, err = pcall(function()
+            writefile(filePath, content)
+        end)
+        if writeSuccess then
+            print("✅ Логотип сохранён: " .. filePath)
+        else
+            warn("⚠️ Не удалось сохранить файл: " .. tostring(err))
+        end
+    else
+        warn("⚠️ Не удалось скачать картинку: " .. tostring(content))
+    end
+else
+    print("✅ Логотип уже есть на диске.")
+end
+
+-- Получаем путь через getcustomasset
+local logoPath = nil
+if getcustomasset then
+    logoPath = getcustomasset(filePath)
+elseif getgenv().getcustomasset then
+    logoPath = getgenv().getcustomasset(filePath)
+else
+    warn("⚠️ getcustomasset не найден.")
+end
+
+-- Создаём ImageLabel (если логотип доступен)
+if logoPath then
+    local logo = Instance.new("ImageLabel")
+    logo.Size = UDim2.new(0, 60, 0, 60)
+    logo.Position = UDim2.new(0, 10, 0, 10)   -- отступ сверху и слева
+    logo.BackgroundTransparency = 1
+    logo.Image = logoPath
+    logo.ZIndex = 2                            -- поверх основного окна
+    logo.Parent = gui
+    print("🖼️ Логотип отображается.")
+else
+    print("❌ Логотип не загружен.")
+end
+
+-- ============================================================
+--  ОСНОВНОЕ ОКНО МЕНЮ
+-- ============================================================
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 600, 0, 400)
 mainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
@@ -33,7 +97,7 @@ stroke.Transparency = 0.7
 stroke.Thickness = 1
 stroke.Parent = mainFrame
 
--- HEADER (no close/minimize buttons)
+-- HEADER
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 40)
 title.Position = UDim2.new(0, 0, 0, 0)
@@ -53,14 +117,14 @@ titleCorners.Parent = title
 
 -- Thin gray line under header (full width)
 local headerLine = Instance.new("Frame")
-headerLine.Size = UDim2.new(1, 0, 0, 1)        -- на всю ширину
+headerLine.Size = UDim2.new(1, 0, 0, 1)
 headerLine.Position = UDim2.new(0, 0, 0, 39)
 headerLine.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 headerLine.BackgroundTransparency = 0.4
 headerLine.BorderSizePixel = 0
 headerLine.Parent = mainFrame
 
--- LEFT PANEL (tabs) - smaller buttons
+-- LEFT PANEL (tabs)
 local leftPanel = Instance.new("Frame")
 leftPanel.Size = UDim2.new(0.2, 0, 1, -40)
 leftPanel.Position = UDim2.new(0, 0, 0, 40)
@@ -95,7 +159,7 @@ local rightCorners = Instance.new("UICorner")
 rightCorners.CornerRadius = UDim.new(0, 6)
 rightCorners.Parent = rightPanel
 
--- TABS (thin, small)
+-- TABS
 local tabButtons = {}
 local tabNames = {"Games", "Player", "Misc", "Combat"}
 
@@ -137,7 +201,6 @@ for i, name in ipairs(tabNames) do
     local btn = createTabButton(name)
     tabButtons[name] = btn
 
-    -- Content frame (empty, NO internal lines)
     local content = Instance.new("Frame")
     content.Size = UDim2.new(1, -10, 1, -10)
     content.Position = UDim2.new(0, 5, 0, 5)
@@ -151,12 +214,10 @@ for i, name in ipairs(tabNames) do
     contentCorners.CornerRadius = UDim.new(0, 6)
     contentCorners.Parent = content
 
-    -- НЕТ линий внутри!
-
     rightContentFrames[name] = content
 end
 
--- Tab click handlers (subtle highlight, no red)
+-- Tab click handlers
 for name, btn in pairs(tabButtons) do
     btn.MouseButton1Click:Connect(function()
         for n, frame in pairs(rightContentFrames) do
@@ -182,34 +243,29 @@ tabButtons["Games"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Games"].BackgroundTransparency = 0.1
 tabButtons["Games"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
--- =====================================================
---  FOOTER: two thin full-width lines + centered text
--- =====================================================
+-- FOOTER
 local footer = Instance.new("Frame")
 footer.Size = UDim2.new(1, 0, 0, 35)
 footer.Position = UDim2.new(0, 0, 1, -35)
 footer.BackgroundTransparency = 1
 footer.Parent = mainFrame
 
--- Upper full-width line
 local lineUp = Instance.new("Frame")
-lineUp.Size = UDim2.new(1, 0, 0, 1)           -- полная ширина
+lineUp.Size = UDim2.new(1, 0, 0, 1)
 lineUp.Position = UDim2.new(0, 0, 0, 2)
 lineUp.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 lineUp.BackgroundTransparency = 0.4
 lineUp.BorderSizePixel = 0
 lineUp.Parent = footer
 
--- Lower full-width line
 local lineDown = Instance.new("Frame")
-lineDown.Size = UDim2.new(1, 0, 0, 1)         -- полная ширина
+lineDown.Size = UDim2.new(1, 0, 0, 1)
 lineDown.Position = UDim2.new(0, 0, 1, -3)
 lineDown.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 lineDown.BackgroundTransparency = 0.4
 lineDown.BorderSizePixel = 0
 lineDown.Parent = footer
 
--- Text in the middle
 local footerText = Instance.new("TextLabel")
 footerText.Size = UDim2.new(1, 0, 1, 0)
 footerText.Position = UDim2.new(0, 0, 0, 0)
@@ -222,4 +278,4 @@ footerText.TextXAlignment = Enum.TextXAlignment.Center
 footerText.TextYAlignment = Enum.TextYAlignment.Center
 footerText.Parent = footer
 
-print("✅ Aqwarium HUB (lines removed inside tabs, full-width borders) loaded!")
+print("✅ Aqwarium HUB (with logo) loaded!")
