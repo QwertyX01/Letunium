@@ -3,7 +3,7 @@
 --  Tabs: Games | Player | Misc | Combat
 --  Footer: script By | tormentor412
 --  LOGO 32x32 with rounded corners (UICorner)
---  Font: SourceSansBold (like AX-SCRIPTS)
+--  Font: Jura (from rbxasset://fonts/families/Jura.json)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -116,15 +116,15 @@ else
     print("❌ Логотип не загружен")
 end
 
--- Заголовок текста (AQWARIUM SCRIPT, SourceSansBold)
+-- ЗАГОЛОВОК (AQWARIUM SCRIPT) — шрифт JuraBold
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, -50, 1, 0)
 title.Position = UDim2.new(0, 50, 0, 0)
 title.BackgroundTransparency = 1
-title.Text = "AQWARIUM SCRIPT"   -- заглавные буквы
+title.Text = "AQWARIUM SCRIPT"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextSize = 22
-title.Font = Enum.Font.SourceSansBold   -- шрифт как в AX-SCRIPTS
+title.Font = Enum.Font.JuraBold   -- жирный Jura
 title.TextXAlignment = Enum.TextXAlignment.Center
 title.TextYAlignment = Enum.TextYAlignment.Center
 title.Parent = header
@@ -178,7 +178,7 @@ rightCorners.CornerRadius = UDim.new(0, 6)
 rightCorners.Parent = rightPanel
 
 -- ============================================================
---  TABS
+--  TABS (вкладки тоже на Jura)
 -- ============================================================
 local tabButtons = {}
 local tabNames = {"Games", "Player", "Misc", "Combat"}
@@ -192,7 +192,7 @@ local function createTabButton(name)
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(200, 200, 200)
     btn.TextSize = 14
-    btn.Font = Enum.Font.SourceSans   -- обычный SourceSans для кнопок
+    btn.Font = Enum.Font.JuraMedium   -- вкладки — JuraMedium
     btn.Parent = leftPanel
 
     local btnCorners = Instance.new("UICorner")
@@ -261,7 +261,7 @@ tabButtons["Games"].BackgroundTransparency = 0.1
 tabButtons["Games"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
 -- ============================================================
---  FOOTER
+--  FOOTER (тоже Jura)
 -- ============================================================
 local footer = Instance.new("Frame")
 footer.Size = UDim2.new(1, 0, 0, 35)
@@ -292,9 +292,9 @@ footerText.BackgroundTransparency = 1
 footerText.Text = "script By | tormentor412"
 footerText.TextColor3 = Color3.fromRGB(150, 150, 150)
 footerText.TextSize = 14
-footerText.Font = Enum.Font.SourceSans   -- тоже SourceSans
+footerText.Font = Enum.Font.JuraMedium   -- футер тоже Jura
 footerText.TextXAlignment = Enum.TextXAlignment.Center
 footerText.TextYAlignment = Enum.TextYAlignment.Center
 footerText.Parent = footer
 
-print("✅ AQWARIUM SCRIPT загружен! (шрифт SourceSans, заголовок заглавными)")
+print("✅ AQWARIUM SCRIPT (шрифт Jura) загружен!")
