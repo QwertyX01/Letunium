@@ -3,6 +3,7 @@
 --  Tabs: Games | Player | Misc | Combat
 --  Footer: script By | tormentor412
 --  LOGO 32x32 с закруглёнными углами
+--  Надпись рядом с логотипом (слева)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -93,13 +94,13 @@ headerCorners.CornerRadius = UDim.new(0, 12)
 headerCorners.Parent = header
 
 -- ============================================================
---  ЛОГОТИП
+--  ЛОГОТИП (слева)
 -- ============================================================
 if logoPath then
     local logo = Instance.new("ImageLabel")
     logo.Name = "MenuLogoIcon"
     logo.Size = UDim2.new(0, 32, 0, 32)
-    logo.Position = UDim2.new(0, 8, 0, 6)
+    logo.Position = UDim2.new(0, 8, 0, 4)   -- отступ сверху 4 для центрирования (40-32)/2 = 4
     logo.BackgroundTransparency = 1
     logo.BorderSizePixel = 0
     logo.Image = logoPath
@@ -115,20 +116,20 @@ else
     print("❌ Логотип не загружен")
 end
 
--- Заголовок (GothamBold)
+-- Заголовок (AQWARIUM SCRIPT) — рядом с логотипом (слева)
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -50, 1, 0)
-title.Position = UDim2.new(0, 50, 0, 0)
+title.Size = UDim2.new(0, 220, 1, 0)          -- фиксированная ширина, чтобы не растягивался
+title.Position = UDim2.new(0, 48, 0, 0)       -- отступ слева = 8 (лого) + 32 (ширина) + 8 (отступ)
 title.BackgroundTransparency = 1
 title.Text = "AQWARIUM SCRIPT"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextSize = 22
 title.Font = Enum.Font.GothamBold
-title.TextXAlignment = Enum.TextXAlignment.Center
+title.TextXAlignment = Enum.TextXAlignment.Left  -- прижат к левому краю
 title.TextYAlignment = Enum.TextYAlignment.Center
 title.Parent = header
 
--- Серая линия
+-- Серая линия под заголовком
 local headerLine = Instance.new("Frame")
 headerLine.Size = UDim2.new(1, 0, 0, 1)
 headerLine.Position = UDim2.new(0, 0, 0, 39)
@@ -293,4 +294,4 @@ footerText.TextXAlignment = Enum.TextXAlignment.Center
 footerText.TextYAlignment = Enum.TextYAlignment.Center
 footerText.Parent = footer
 
-print("✅ AQWARIUM SCRIPT (шрифты Gotham) загружен!")
+print("✅ AQWARIUM SCRIPT (надпись рядом с логотипом) загружен!")
