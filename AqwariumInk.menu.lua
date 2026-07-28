@@ -2,7 +2,7 @@
 --  Aqwarium HUB (Minimal, thin, no close buttons)
 --  Tabs: Games | Player | Misc | Combat
 --  Footer: script By | tormentor412
---  With LOGO in top-left corner (60x60) — прямая ссылка
+--  LOGO inside mainFrame, top-left corner
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -53,19 +53,6 @@ elseif getgenv().getcustomasset then
     logoPath = getgenv().getcustomasset(filePath)
 end
 
-if logoPath then
-    local logo = Instance.new("ImageLabel")
-    logo.Size = UDim2.new(0, 60, 0, 60)
-    logo.Position = UDim2.new(0, 10, 0, 10)
-    logo.BackgroundTransparency = 1
-    logo.Image = logoPath
-    logo.ZIndex = 2
-    logo.Parent = gui
-    print("🖼️ Логотип отображается")
-else
-    print("❌ Логотип не загружен")
-end
-
 -- ============================================================
 --  ОСНОВНОЕ ОКНО МЕНЮ
 -- ============================================================
@@ -90,7 +77,23 @@ stroke.Transparency = 0.7
 stroke.Thickness = 1
 stroke.Parent = mainFrame
 
--- HEADER
+-- ============================================================
+--  ЛОГОТИП ВНУТРИ mainFrame (ровно в углу)
+-- ============================================================
+if logoPath then
+    local logo = Instance.new("ImageLabel")
+    logo.Size = UDim2.new(0, 60, 0, 60)
+    logo.Position = UDim2.new(0, 5, 0, 5)   -- отступ 5 пикселей от левого и верхнего края
+    logo.BackgroundTransparency = 1
+    logo.Image = logoPath
+    logo.ZIndex = 3                         -- поверх заголовка
+    logo.Parent = mainFrame
+    print("🖼️ Логотип в углу меню")
+else
+    print("❌ Логотип не загружен")
+end
+
+-- HEADER (заголовок теперь смещён вправо, чтобы не перекрывать логотип)
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 40)
 title.Position = UDim2.new(0, 0, 0, 0)
@@ -267,4 +270,4 @@ footerText.TextXAlignment = Enum.TextXAlignment.Center
 footerText.TextYAlignment = Enum.TextYAlignment.Center
 footerText.Parent = footer
 
-print("✅ Aqwarium HUB (с логотипом) загружен!")
+print("✅ Aqwarium HUB (логотип в углу меню) загружен!")
