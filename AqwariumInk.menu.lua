@@ -2,7 +2,7 @@
 --  Aqwarium HUB (Minimal, thin, no close buttons)
 --  Tabs: Games | Player | Misc | Combat
 --  Footer: script By | tormentor412
---  With LOGO in top-left corner (60x60)
+--  With LOGO in top-left corner (60x60) — прямая ссылка
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -12,13 +12,12 @@ gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
 -- ============================================================
---  ЗАГРУЗКА И ОТОБРАЖЕНИЕ ЛОГОТИПА
+--  ЗАГРУЗКА ЛОГОТИПА (ПРЯМАЯ ССЫЛКА)
 -- ============================================================
-local imageUrl = "https://i.imgur.com/ВАШ_КОД.png"   -- <--- ЗАМЕНИТЕ НА СВОЮ ССЫЛКУ
+local imageUrl = "https://i.ibb.co/MkhPVnWs/Chat-GPT-Image-28-2026-14-13-59.png"
 local fileName = "menu_logo.png"
 local filePath = fileName
 
--- Функция проверки существования файла (упрощённо)
 local function fileExists(path)
     local success, result = pcall(function()
         return loadfile(path)
@@ -26,14 +25,12 @@ local function fileExists(path)
     return success and result ~= nil
 end
 
-local logoContent = nil
 if not fileExists(filePath) then
     print("📥 Скачиваем логотип...")
     local success, content = pcall(function()
         return game:HttpGet(imageUrl, true)
     end)
     if success and content then
-        logoContent = content
         local writeSuccess, err = pcall(function()
             writefile(filePath, content)
         end)
@@ -43,34 +40,30 @@ if not fileExists(filePath) then
             warn("⚠️ Не удалось сохранить файл: " .. tostring(err))
         end
     else
-        warn("⚠️ Не удалось скачать картинку: " .. tostring(content))
+        warn("⚠️ Не удалось скачать картинку")
     end
 else
     print("✅ Логотип уже есть на диске.")
 end
 
--- Получаем путь через getcustomasset
 local logoPath = nil
 if getcustomasset then
     logoPath = getcustomasset(filePath)
 elseif getgenv().getcustomasset then
     logoPath = getgenv().getcustomasset(filePath)
-else
-    warn("⚠️ getcustomasset не найден.")
 end
 
--- Создаём ImageLabel (если логотип доступен)
 if logoPath then
     local logo = Instance.new("ImageLabel")
     logo.Size = UDim2.new(0, 60, 0, 60)
-    logo.Position = UDim2.new(0, 10, 0, 10)   -- отступ сверху и слева
+    logo.Position = UDim2.new(0, 10, 0, 10)
     logo.BackgroundTransparency = 1
     logo.Image = logoPath
-    logo.ZIndex = 2                            -- поверх основного окна
+    logo.ZIndex = 2
     logo.Parent = gui
-    print("🖼️ Логотип отображается.")
+    print("🖼️ Логотип отображается")
 else
-    print("❌ Логотип не загружен.")
+    print("❌ Логотип не загружен")
 end
 
 -- ============================================================
@@ -115,7 +108,6 @@ local titleCorners = Instance.new("UICorner")
 titleCorners.CornerRadius = UDim.new(0, 12)
 titleCorners.Parent = title
 
--- Thin gray line under header (full width)
 local headerLine = Instance.new("Frame")
 headerLine.Size = UDim2.new(1, 0, 0, 1)
 headerLine.Position = UDim2.new(0, 0, 0, 39)
@@ -217,13 +209,11 @@ for i, name in ipairs(tabNames) do
     rightContentFrames[name] = content
 end
 
--- Tab click handlers
 for name, btn in pairs(tabButtons) do
     btn.MouseButton1Click:Connect(function()
         for n, frame in pairs(rightContentFrames) do
             frame.Visible = (n == name)
         end
-
         for n, b in pairs(tabButtons) do
             if n == name then
                 b.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
@@ -238,7 +228,6 @@ for name, btn in pairs(tabButtons) do
     end)
 end
 
--- Initial selection
 tabButtons["Games"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Games"].BackgroundTransparency = 0.1
 tabButtons["Games"].TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -278,4 +267,4 @@ footerText.TextXAlignment = Enum.TextXAlignment.Center
 footerText.TextYAlignment = Enum.TextYAlignment.Center
 footerText.Parent = footer
 
-print("✅ Aqwarium HUB (with logo) loaded!")
+print("✅ Aqwarium HUB (с логотипом) загружен!")
