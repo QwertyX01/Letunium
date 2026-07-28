@@ -1,7 +1,10 @@
 -- =====================================================
---  AQWARIUM SCRIPT (серый контур, 4 вкладки)
+--  AQWARIUM SCRIPT (Gotham шрифты)
 --  Tabs: Games | Players | Misc | Combat
+--  Footer: script By | tormentor412
+--  LOGO 32x32 с закруглёнными углами
 -- =====================================================
+
 local player = game:GetService("Players").LocalPlayer
 local gui = Instance.new("ScreenGui")
 gui.Name = "AqwariumScript"
@@ -68,11 +71,10 @@ local mainCorners = Instance.new("UICorner")
 mainCorners.CornerRadius = UDim.new(0, 12)
 mainCorners.Parent = mainFrame
 
--- СЕРАЯ ОБВОДКА (вместо белой)
 local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(120, 120, 120)  -- серый
-stroke.Transparency = 0.5
-stroke.Thickness = 1.5
+stroke.Color = Color3.fromRGB(255, 255, 255)
+stroke.Transparency = 0.7
+stroke.Thickness = 1
 stroke.Parent = mainFrame
 
 -- ============================================================
@@ -130,7 +132,7 @@ headerLine.BorderSizePixel = 0
 headerLine.Parent = mainFrame
 
 -- ============================================================
---  ПАНЕЛИ
+--  PANELS
 -- ============================================================
 local leftPanel = Instance.new("Frame")
 leftPanel.Size = UDim2.new(0.2, 0, 1, -40)
@@ -140,6 +142,10 @@ leftPanel.BackgroundTransparency = 0
 leftPanel.BorderSizePixel = 0
 leftPanel.ClipsDescendants = true
 leftPanel.Parent = mainFrame
+
+local leftCorners = Instance.new("UICorner")
+leftCorners.CornerRadius = UDim.new(0, 6)
+leftCorners.Parent = leftPanel
 
 local layoutLeft = Instance.new("UIListLayout")
 layoutLeft.FillDirection = Enum.FillDirection.Vertical
@@ -162,11 +168,10 @@ rightCorners.CornerRadius = UDim.new(0, 6)
 rightCorners.Parent = rightPanel
 
 -- ============================================================
---  ВКЛАДКИ (4 штуки: Games, Players, Misc, Combat)
+--  TABS (ПРАВИЛЬНЫЕ НАЗВАНИЯ: Games, Players, Misc, Combat)
 -- ============================================================
-local tabNames = {"Games", "Players", "Misc", "Combat"}
 local tabButtons = {}
-local rightContentFrames = {}
+local tabNames = {"Games", "Players", "Misc", "Combat"}   -- <-- ИСПРАВЛЕНО
 
 local function createTabButton(name)
     local btn = Instance.new("TextButton")
@@ -200,6 +205,8 @@ local function createTabButton(name)
     return btn
 end
 
+local rightContentFrames = {}
+
 for i, name in ipairs(tabNames) do
     local btn = createTabButton(name)
     tabButtons[name] = btn
@@ -220,6 +227,7 @@ for i, name in ipairs(tabNames) do
     rightContentFrames[name] = content
 end
 
+-- Обработка кликов по вкладкам
 for name, btn in pairs(tabButtons) do
     btn.MouseButton1Click:Connect(function()
         for n, frame in pairs(rightContentFrames) do
@@ -239,12 +247,13 @@ for name, btn in pairs(tabButtons) do
     end)
 end
 
+-- Выделяем первую вкладку (Games) по умолчанию
 tabButtons["Games"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Games"].BackgroundTransparency = 0.1
 tabButtons["Games"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
 -- ============================================================
---  ФУТЕР
+--  FOOTER
 -- ============================================================
 local footer = Instance.new("Frame")
 footer.Size = UDim2.new(1, 0, 0, 35)
@@ -280,4 +289,4 @@ footerText.TextXAlignment = Enum.TextXAlignment.Center
 footerText.TextYAlignment = Enum.TextYAlignment.Center
 footerText.Parent = footer
 
-print("✅ AQWARIUM SCRIPT (серая обводка, 4 вкладки) загружен!")
+print("✅ AQWARIUM SCRIPT загружен! Вкладки: Games, Players, Misc, Combat")
