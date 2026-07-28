@@ -1,5 +1,6 @@
 -- =====================================================
---  AQWARIUM SCRIPT (с логотипом, только Misc и Combat)
+--  AQWARIUM SCRIPT (серый контур, 4 вкладки)
+--  Tabs: Games | Players | Misc | Combat
 -- =====================================================
 local player = game:GetService("Players").LocalPlayer
 local gui = Instance.new("ScreenGui")
@@ -67,14 +68,15 @@ local mainCorners = Instance.new("UICorner")
 mainCorners.CornerRadius = UDim.new(0, 12)
 mainCorners.Parent = mainFrame
 
+-- СЕРАЯ ОБВОДКА (вместо белой)
 local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(255, 255, 255)
-stroke.Transparency = 0.7
-stroke.Thickness = 1
+stroke.Color = Color3.fromRGB(120, 120, 120)  -- серый
+stroke.Transparency = 0.5
+stroke.Thickness = 1.5
 stroke.Parent = mainFrame
 
 -- ============================================================
---  HEADER (с логотипом)
+--  HEADER
 -- ============================================================
 local header = Instance.new("Frame")
 header.Size = UDim2.new(1, 0, 0, 40)
@@ -88,7 +90,7 @@ local headerCorners = Instance.new("UICorner")
 headerCorners.CornerRadius = UDim.new(0, 12)
 headerCorners.Parent = header
 
--- Логотип (слева)
+-- Логотип
 if logoPath then
     local logo = Instance.new("ImageLabel")
     logo.Name = "MenuLogoIcon"
@@ -103,12 +105,9 @@ if logoPath then
     local logoCorner = Instance.new("UICorner")
     logoCorner.CornerRadius = UDim.new(0, 8)
     logoCorner.Parent = logo
-    print("🖼️ Логотип загружен")
-else
-    print("❌ Логотип не загружен")
 end
 
--- Заголовок (без v2)
+-- Заголовок
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(0, 220, 1, 0)
 title.Position = UDim2.new(0, 48, 0, 0)
@@ -121,7 +120,7 @@ title.TextXAlignment = Enum.TextXAlignment.Left
 title.TextYAlignment = Enum.TextYAlignment.Center
 title.Parent = header
 
--- Серая линия под заголовком
+-- Серая линия
 local headerLine = Instance.new("Frame")
 headerLine.Size = UDim2.new(1, 0, 0, 1)
 headerLine.Position = UDim2.new(0, 0, 0, 39)
@@ -131,7 +130,7 @@ headerLine.BorderSizePixel = 0
 headerLine.Parent = mainFrame
 
 -- ============================================================
---  ПАНЕЛИ (левая и правая)
+--  ПАНЕЛИ
 -- ============================================================
 local leftPanel = Instance.new("Frame")
 leftPanel.Size = UDim2.new(0.2, 0, 1, -40)
@@ -163,9 +162,9 @@ rightCorners.CornerRadius = UDim.new(0, 6)
 rightCorners.Parent = rightPanel
 
 -- ============================================================
---  ВКЛАДКИ (ТОЛЬКО Misc и Combat)
+--  ВКЛАДКИ (4 штуки: Games, Players, Misc, Combat)
 -- ============================================================
-local tabNames = {"Misc", "Combat"}
+local tabNames = {"Games", "Players", "Misc", "Combat"}
 local tabButtons = {}
 local rightContentFrames = {}
 
@@ -240,9 +239,9 @@ for name, btn in pairs(tabButtons) do
     end)
 end
 
-tabButtons["Misc"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-tabButtons["Misc"].BackgroundTransparency = 0.1
-tabButtons["Misc"].TextColor3 = Color3.fromRGB(255, 255, 255)
+tabButtons["Games"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+tabButtons["Games"].BackgroundTransparency = 0.1
+tabButtons["Games"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
 -- ============================================================
 --  ФУТЕР
@@ -281,4 +280,4 @@ footerText.TextXAlignment = Enum.TextXAlignment.Center
 footerText.TextYAlignment = Enum.TextYAlignment.Center
 footerText.Parent = footer
 
-print("✅ AQWARIUM SCRIPT (с логотипом, только Misc и Combat) загружен!")
+print("✅ AQWARIUM SCRIPT (серая обводка, 4 вкладки) загружен!")
