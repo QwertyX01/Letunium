@@ -2,7 +2,7 @@
 --  Aqwarium HUB (Minimal, thin, no close buttons)
 --  Tabs: Games | Player | Misc | Combat
 --  Footer: script By | tormentor412
---  LOGO 32x32 inside header (top-left corner)
+--  LOGO 32x32 with rounded corners (UICorner)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -93,26 +93,32 @@ headerCorners.CornerRadius = UDim.new(0, 12)
 headerCorners.Parent = header
 
 -- ============================================================
---  ЛОГОТИП (внутри заголовка, 32x32, ровно в углу)
+--  ЛОГОТИП (внутри заголовка, 32x32, с мягкими углами)
 -- ============================================================
 if logoPath then
     local logo = Instance.new("ImageLabel")
     logo.Name = "MenuLogoIcon"
-    logo.Size = UDim2.new(0, 32, 0, 32)           -- строго 32x32
-    logo.Position = UDim2.new(0, 8, 0, 6)        -- отступы от левого и верхнего края
+    logo.Size = UDim2.new(0, 32, 0, 32)
+    logo.Position = UDim2.new(0, 8, 0, 6)
     logo.BackgroundTransparency = 1
     logo.BorderSizePixel = 0
     logo.Image = logoPath
-    logo.ZIndex = 15                             -- поверх всего
-    logo.Parent = header                         -- привязываем к заголовку
-    print("🖼️ Логотип 32x32 в заголовке")
+    logo.ZIndex = 15
+    logo.Parent = header
+
+    -- СКРУГЛЕНИЕ УГЛОВ ЛОГОТИПА (радиус 8 пикселей)
+    local logoCorner = Instance.new("UICorner")
+    logoCorner.CornerRadius = UDim.new(0, 8)   -- можешь изменить на 6, 10, 12 и т.д.
+    logoCorner.Parent = logo
+
+    print("🖼️ Логотип 32x32 с мягкими углами")
 else
     print("❌ Логотип не загружен")
 end
 
 -- Заголовок текста (со смещением вправо, чтобы не перекрывать логотип)
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -50, 1, 0)             -- отступ слева 50, чтобы не наезжать
+title.Size = UDim2.new(1, -50, 1, 0)
 title.Position = UDim2.new(0, 50, 0, 0)
 title.BackgroundTransparency = 1
 title.Text = "Aqwarium HUB"
@@ -123,7 +129,7 @@ title.TextXAlignment = Enum.TextXAlignment.Center
 title.TextYAlignment = Enum.TextYAlignment.Center
 title.Parent = header
 
--- Серая линия под заголовком (полная ширина)
+-- Серая линия под заголовком
 local headerLine = Instance.new("Frame")
 headerLine.Size = UDim2.new(1, 0, 0, 1)
 headerLine.Position = UDim2.new(0, 0, 0, 39)
@@ -291,4 +297,4 @@ footerText.TextXAlignment = Enum.TextXAlignment.Center
 footerText.TextYAlignment = Enum.TextYAlignment.Center
 footerText.Parent = footer
 
-print("✅ Aqwarium HUB (логотип 32x32 в углу) загружен!")
+print("✅ Aqwarium HUB (логотип с мягкими углами) загружен!")
