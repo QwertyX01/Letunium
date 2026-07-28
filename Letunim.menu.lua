@@ -2,6 +2,7 @@
 --  Aqwarium HUB (Minimal, thin, no close buttons)
 --  Tabs: Games | Player | Misc | Combat
 --  Footer: script By | tormentor412
+--  Only header line and footer lines (no internal lines)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -42,7 +43,7 @@ title.BorderSizePixel = 0
 title.Text = "Aqwarium HUB"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextSize = 22
-title.Font = Enum.Font.GothamMedium  -- более тонкий шрифт
+title.Font = Enum.Font.GothamMedium
 title.TextXAlignment = Enum.TextXAlignment.Center
 title.Parent = mainFrame
 
@@ -50,10 +51,10 @@ local titleCorners = Instance.new("UICorner")
 titleCorners.CornerRadius = UDim.new(0, 12)
 titleCorners.Parent = title
 
--- Thin gray line under header (instead of red)
+-- Thin gray line under header (full width)
 local headerLine = Instance.new("Frame")
-headerLine.Size = UDim2.new(0.8, 0, 0, 1)
-headerLine.Position = UDim2.new(0.1, 0, 0, 39)
+headerLine.Size = UDim2.new(1, 0, 0, 1)        -- на всю ширину
+headerLine.Position = UDim2.new(0, 0, 0, 39)
 headerLine.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 headerLine.BackgroundTransparency = 0.4
 headerLine.BorderSizePixel = 0
@@ -100,14 +101,14 @@ local tabNames = {"Games", "Player", "Misc", "Combat"}
 
 local function createTabButton(name)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.85, 0, 0, 30)   -- меньшая высота
+    btn.Size = UDim2.new(0.85, 0, 0, 30)
     btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
     btn.BackgroundTransparency = 0.5
     btn.BorderSizePixel = 0
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    btn.TextSize = 14                    -- меньший шрифт
-    btn.Font = Enum.Font.GothamMedium    -- не жирный
+    btn.TextSize = 14
+    btn.Font = Enum.Font.GothamMedium
     btn.Parent = leftPanel
 
     local btnCorners = Instance.new("UICorner")
@@ -136,7 +137,7 @@ for i, name in ipairs(tabNames) do
     local btn = createTabButton(name)
     tabButtons[name] = btn
 
-    -- Content frame (empty with 3 gray lines)
+    -- Content frame (empty, NO internal lines)
     local content = Instance.new("Frame")
     content.Size = UDim2.new(1, -10, 1, -10)
     content.Position = UDim2.new(0, 5, 0, 5)
@@ -150,16 +151,7 @@ for i, name in ipairs(tabNames) do
     contentCorners.CornerRadius = UDim.new(0, 6)
     contentCorners.Parent = content
 
-    -- Gray separator lines
-    for j = 1, 3 do
-        local line = Instance.new("Frame")
-        line.Size = UDim2.new(0.9, 0, 0, 1)  -- thinner lines
-        line.Position = UDim2.new(0.05, 0, j * 0.3, 0)
-        line.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        line.BackgroundTransparency = 0.3
-        line.BorderSizePixel = 0
-        line.Parent = content
-    end
+    -- НЕТ линий внутри!
 
     rightContentFrames[name] = content
 end
@@ -191,7 +183,7 @@ tabButtons["Games"].BackgroundTransparency = 0.1
 tabButtons["Games"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
 -- =====================================================
---  FOOTER: thin gray lines + centered text
+--  FOOTER: two thin full-width lines + centered text
 -- =====================================================
 local footer = Instance.new("Frame")
 footer.Size = UDim2.new(1, 0, 0, 35)
@@ -199,19 +191,19 @@ footer.Position = UDim2.new(0, 0, 1, -35)
 footer.BackgroundTransparency = 1
 footer.Parent = mainFrame
 
--- Upper thin line
+-- Upper full-width line
 local lineUp = Instance.new("Frame")
-lineUp.Size = UDim2.new(0.8, 0, 0, 1)
-lineUp.Position = UDim2.new(0.1, 0, 0, 2)
+lineUp.Size = UDim2.new(1, 0, 0, 1)           -- полная ширина
+lineUp.Position = UDim2.new(0, 0, 0, 2)
 lineUp.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 lineUp.BackgroundTransparency = 0.4
 lineUp.BorderSizePixel = 0
 lineUp.Parent = footer
 
--- Lower thin line
+-- Lower full-width line
 local lineDown = Instance.new("Frame")
-lineDown.Size = UDim2.new(0.8, 0, 0, 1)
-lineDown.Position = UDim2.new(0.1, 0, 1, -3)
+lineDown.Size = UDim2.new(1, 0, 0, 1)         -- полная ширина
+lineDown.Position = UDim2.new(0, 0, 1, -3)
 lineDown.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 lineDown.BackgroundTransparency = 0.4
 lineDown.BorderSizePixel = 0
@@ -230,4 +222,4 @@ footerText.TextXAlignment = Enum.TextXAlignment.Center
 footerText.TextYAlignment = Enum.TextYAlignment.Center
 footerText.Parent = footer
 
-print("✅ Aqwarium HUB (minimal, thin, no close button) loaded!")
+print("✅ Aqwarium HUB (lines removed inside tabs, full-width borders) loaded!")
