@@ -1,6 +1,6 @@
 -- =====================================================
 --  AQWARIUM SCRIPT (Gotham шрифты)
---  Tabs: Games | Player | Misc | Combat
+--  Tabs: Games | Players | Misc | Combat
 --  Footer: script By | tormentor412
 --  LOGO 32x32 с закруглёнными углами
 --  Надпись рядом с логотипом (слева)
@@ -100,7 +100,7 @@ if logoPath then
     local logo = Instance.new("ImageLabel")
     logo.Name = "MenuLogoIcon"
     logo.Size = UDim2.new(0, 32, 0, 32)
-    logo.Position = UDim2.new(0, 8, 0, 4)   -- отступ сверху 4 для центрирования (40-32)/2 = 4
+    logo.Position = UDim2.new(0, 8, 0, 4)
     logo.BackgroundTransparency = 1
     logo.BorderSizePixel = 0
     logo.Image = logoPath
@@ -116,20 +116,20 @@ else
     print("❌ Логотип не загружен")
 end
 
--- Заголовок (AQWARIUM SCRIPT) — рядом с логотипом (слева)
+-- Заголовок (AQWARIUM SCRIPT) — рядом с логотипом
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(0, 220, 1, 0)          -- фиксированная ширина, чтобы не растягивался
-title.Position = UDim2.new(0, 48, 0, 0)       -- отступ слева = 8 (лого) + 32 (ширина) + 8 (отступ)
+title.Size = UDim2.new(0, 220, 1, 0)
+title.Position = UDim2.new(0, 48, 0, 0)
 title.BackgroundTransparency = 1
 title.Text = "AQWARIUM SCRIPT"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextSize = 22
 title.Font = Enum.Font.GothamBold
-title.TextXAlignment = Enum.TextXAlignment.Left  -- прижат к левому краю
+title.TextXAlignment = Enum.TextXAlignment.Left
 title.TextYAlignment = Enum.TextYAlignment.Center
 title.Parent = header
 
--- Серая линия под заголовком
+-- Серая линия
 local headerLine = Instance.new("Frame")
 headerLine.Size = UDim2.new(1, 0, 0, 1)
 headerLine.Position = UDim2.new(0, 0, 0, 39)
@@ -175,10 +175,10 @@ rightCorners.CornerRadius = UDim.new(0, 6)
 rightCorners.Parent = rightPanel
 
 -- ============================================================
---  TABS (GothamMedium)
+--  TABS (GothamMedium) — изменён порядок: Games, Players, Misc, Combat
 -- ============================================================
 local tabButtons = {}
-local tabNames = {"Games", "Player", "Misc", "Combat"}
+local tabNames = {"Games", "Players", "Misc", "Combat"}   -- заменено Player → Players
 
 local function createTabButton(name)
     local btn = Instance.new("TextButton")
@@ -294,4 +294,4 @@ footerText.TextXAlignment = Enum.TextXAlignment.Center
 footerText.TextYAlignment = Enum.TextYAlignment.Center
 footerText.Parent = footer
 
-print("✅ AQWARIUM SCRIPT (надпись рядом с логотипом) загружен!")
+print("✅ AQWARIUM SCRIPT (вкладки: Games, Players, Misc, Combat) загружен!")
