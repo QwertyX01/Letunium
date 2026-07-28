@@ -2,7 +2,7 @@
 --  Aqwarium HUB (Minimal, thin, no close buttons)
 --  Tabs: Games | Player | Misc | Combat
 --  Footer: script By | tormentor412
---  LOGO inside mainFrame, top-left corner
+--  LOGO inside header (does not overlap tabs)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -78,51 +78,62 @@ stroke.Thickness = 1
 stroke.Parent = mainFrame
 
 -- ============================================================
---  ЛОГОТИП ВНУТРИ mainFrame (ровно в углу)
+--  HEADER (с логотипом внутри)
 -- ============================================================
+local header = Instance.new("Frame")
+header.Size = UDim2.new(1, 0, 0, 40)
+header.Position = UDim2.new(0, 0, 0, 0)
+header.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+header.BackgroundTransparency = 0.3
+header.BorderSizePixel = 0
+header.Parent = mainFrame
+
+local headerCorners = Instance.new("UICorner")
+headerCorners.CornerRadius = UDim.new(0, 12)
+headerCorners.Parent = header
+
+-- Логотип внутри header (ровно по вертикали, слева)
 if logoPath then
     local logo = Instance.new("ImageLabel")
-    logo.Size = UDim2.new(0, 60, 0, 60)
-    logo.Position = UDim2.new(0, 5, 0, 5)   -- отступ 5 пикселей от левого и верхнего края
+    logo.Size = UDim2.new(0, 36, 0, 36)            -- уменьшен до 36x36
+    logo.Position = UDim2.new(0, 6, 0.5, -18)      -- отступ слева 6, центрирован по вертикали
     logo.BackgroundTransparency = 1
     logo.Image = logoPath
-    logo.ZIndex = 3                         -- поверх заголовка
-    logo.Parent = mainFrame
-    print("🖼️ Логотип в углу меню")
+    logo.ZIndex = 3
+    logo.Parent = header
+    print("🖼️ Логотип в заголовке")
 else
     print("❌ Логотип не загружен")
 end
 
--- HEADER (заголовок теперь смещён вправо, чтобы не перекрывать логотип)
+-- Заголовок текста (со смещением вправо, чтобы не перекрывать логотип)
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 40)
-title.Position = UDim2.new(0, 0, 0, 0)
-title.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-title.BackgroundTransparency = 0.3
-title.BorderSizePixel = 0
+title.Size = UDim2.new(1, -50, 1, 0)              -- ширина с отступом слева 50
+title.Position = UDim2.new(0, 50, 0, 0)
+title.BackgroundTransparency = 1
 title.Text = "Aqwarium HUB"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextSize = 22
 title.Font = Enum.Font.GothamMedium
 title.TextXAlignment = Enum.TextXAlignment.Center
-title.Parent = mainFrame
+title.TextYAlignment = Enum.TextYAlignment.Center
+title.Parent = header
 
-local titleCorners = Instance.new("UICorner")
-titleCorners.CornerRadius = UDim.new(0, 12)
-titleCorners.Parent = title
-
+-- Серая линия под заголовком (теперь под header)
 local headerLine = Instance.new("Frame")
 headerLine.Size = UDim2.new(1, 0, 0, 1)
-headerLine.Position = UDim2.new(0, 0, 0, 39)
+headerLine.Position = UDim2.new(0, 0, 0, 39)       -- под header
 headerLine.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 headerLine.BackgroundTransparency = 0.4
 headerLine.BorderSizePixel = 0
 headerLine.Parent = mainFrame
 
--- LEFT PANEL (tabs)
+-- ============================================================
+--  LEFT PANEL (tabs)
+-- ============================================================
 local leftPanel = Instance.new("Frame")
-leftPanel.Size = UDim2.new(0.2, 0, 1, -40)
-leftPanel.Position = UDim2.new(0, 0, 0, 40)
+leftPanel.Size = UDim2.new(0.2, 0, 1, -40)        -- высота без header (40 уже учтено? у нас header высотой 40, так что leftPanel идёт с Y=40)
+leftPanel.Position = UDim2.new(0, 0, 0, 40)       -- начинается после header
 leftPanel.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 leftPanel.BackgroundTransparency = 0
 leftPanel.BorderSizePixel = 0
@@ -140,7 +151,9 @@ layoutLeft.VerticalAlignment = Enum.VerticalAlignment.Top
 layoutLeft.Padding = UDim.new(0, 6)
 layoutLeft.Parent = leftPanel
 
--- RIGHT PANEL (content)
+-- ============================================================
+--  RIGHT PANEL (content)
+-- ============================================================
 local rightPanel = Instance.new("Frame")
 rightPanel.Size = UDim2.new(0.8, 0, 1, -40)
 rightPanel.Position = UDim2.new(0.2, 0, 0, 40)
@@ -154,7 +167,9 @@ local rightCorners = Instance.new("UICorner")
 rightCorners.CornerRadius = UDim.new(0, 6)
 rightCorners.Parent = rightPanel
 
--- TABS
+-- ============================================================
+--  TABS
+-- ============================================================
 local tabButtons = {}
 local tabNames = {"Games", "Player", "Misc", "Combat"}
 
@@ -235,7 +250,9 @@ tabButtons["Games"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
 tabButtons["Games"].BackgroundTransparency = 0.1
 tabButtons["Games"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
--- FOOTER
+-- ============================================================
+--  FOOTER
+-- ============================================================
 local footer = Instance.new("Frame")
 footer.Size = UDim2.new(1, 0, 0, 35)
 footer.Position = UDim2.new(0, 0, 1, -35)
@@ -270,4 +287,4 @@ footerText.TextXAlignment = Enum.TextXAlignment.Center
 footerText.TextYAlignment = Enum.TextYAlignment.Center
 footerText.Parent = footer
 
-print("✅ Aqwarium HUB (логотип в углу меню) загружен!")
+print("✅ Aqwarium HUB (логотип внутри заголовка) загружен!")
