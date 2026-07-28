@@ -1,6 +1,6 @@
 -- =====================================================
---  AQWARIUM SCRIPT (Gotham шрифты)
---  Tabs: Games | Players | Misc | Combat
+--  AQWARIUM SCRIPT (только Misc и Combat)
+--  Tabs: Misc | Combat
 --  Footer: script By | tormentor412
 --  LOGO 32x32 с закруглёнными углами
 -- =====================================================
@@ -168,10 +168,10 @@ rightCorners.CornerRadius = UDim.new(0, 6)
 rightCorners.Parent = rightPanel
 
 -- ============================================================
---  TABS (Games, Players, Misc, Combat) — БЕЗ "секунд"!
+--  TABS (только Misc и Combat)
 -- ============================================================
 local tabButtons = {}
-local tabNames = {"Games", "Players", "Misc", "Combat"}
+local tabNames = {"Misc", "Combat"}   -- удалили Games и Players
 
 local function createTabButton(name)
     local btn = Instance.new("TextButton")
@@ -246,9 +246,10 @@ for name, btn in pairs(tabButtons) do
     end)
 end
 
-tabButtons["Games"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-tabButtons["Games"].BackgroundTransparency = 0.1
-tabButtons["Games"].TextColor3 = Color3.fromRGB(255, 255, 255)
+-- Первая активная — Misc
+tabButtons["Misc"].BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+tabButtons["Misc"].BackgroundTransparency = 0.1
+tabButtons["Misc"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
 -- ============================================================
 --  FOOTER
@@ -287,4 +288,4 @@ footerText.TextXAlignment = Enum.TextXAlignment.Center
 footerText.TextYAlignment = Enum.TextYAlignment.Center
 footerText.Parent = footer
 
-print("✅ AQWARIUM SCRIPT загружен! Вкладки: Games, Players, Misc, Combat")
+print("✅ AQWARIUM SCRIPT (только вкладки Misc и Combat) загружен!")
