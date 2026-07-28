@@ -1,9 +1,8 @@
 -- =====================================================
---  AQWARIUM SCRIPT (Minimal, thin, no close buttons)
+--  AQWARIUM SCRIPT (Gotham шрифты)
 --  Tabs: Games | Player | Misc | Combat
 --  Footer: script By | tormentor412
---  LOGO 32x32 with rounded corners (UICorner)
---  Font: Jura (from rbxasset://fonts/families/Jura.json)
+--  LOGO 32x32 с закруглёнными углами
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -13,7 +12,7 @@ gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
 -- ============================================================
---  ЗАГРУЗКА ЛОГОТИПА (ПРЯМАЯ ССЫЛКА)
+--  ЗАГРУЗКА ЛОГОТИПА
 -- ============================================================
 local imageUrl = "https://i.ibb.co/MkhPVnWs/Chat-GPT-Image-28-2026-14-13-59.png"
 local fileName = "menu_logo.png"
@@ -79,7 +78,7 @@ stroke.Thickness = 1
 stroke.Parent = mainFrame
 
 -- ============================================================
---  HEADER (заголовок с логотипом)
+--  HEADER
 -- ============================================================
 local header = Instance.new("Frame")
 header.Size = UDim2.new(1, 0, 0, 40)
@@ -94,7 +93,7 @@ headerCorners.CornerRadius = UDim.new(0, 12)
 headerCorners.Parent = header
 
 -- ============================================================
---  ЛОГОТИП (внутри заголовка, 32x32, с мягкими углами)
+--  ЛОГОТИП
 -- ============================================================
 if logoPath then
     local logo = Instance.new("ImageLabel")
@@ -111,12 +110,12 @@ if logoPath then
     logoCorner.CornerRadius = UDim.new(0, 8)
     logoCorner.Parent = logo
 
-    print("🖼️ Логотип 32x32 с мягкими углами")
+    print("🖼️ Логотип загружен")
 else
     print("❌ Логотип не загружен")
 end
 
--- ЗАГОЛОВОК (AQWARIUM SCRIPT) — шрифт JuraBold
+-- Заголовок (GothamBold)
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, -50, 1, 0)
 title.Position = UDim2.new(0, 50, 0, 0)
@@ -124,12 +123,12 @@ title.BackgroundTransparency = 1
 title.Text = "AQWARIUM SCRIPT"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextSize = 22
-title.Font = Enum.Font.JuraBold   -- жирный Jura
+title.Font = Enum.Font.GothamBold
 title.TextXAlignment = Enum.TextXAlignment.Center
 title.TextYAlignment = Enum.TextYAlignment.Center
 title.Parent = header
 
--- Серая линия под заголовком
+-- Серая линия
 local headerLine = Instance.new("Frame")
 headerLine.Size = UDim2.new(1, 0, 0, 1)
 headerLine.Position = UDim2.new(0, 0, 0, 39)
@@ -139,7 +138,7 @@ headerLine.BorderSizePixel = 0
 headerLine.Parent = mainFrame
 
 -- ============================================================
---  LEFT PANEL (tabs)
+--  PANELS
 -- ============================================================
 local leftPanel = Instance.new("Frame")
 leftPanel.Size = UDim2.new(0.2, 0, 1, -40)
@@ -161,9 +160,6 @@ layoutLeft.VerticalAlignment = Enum.VerticalAlignment.Top
 layoutLeft.Padding = UDim.new(0, 6)
 layoutLeft.Parent = leftPanel
 
--- ============================================================
---  RIGHT PANEL (content)
--- ============================================================
 local rightPanel = Instance.new("Frame")
 rightPanel.Size = UDim2.new(0.8, 0, 1, -40)
 rightPanel.Position = UDim2.new(0.2, 0, 0, 40)
@@ -178,7 +174,7 @@ rightCorners.CornerRadius = UDim.new(0, 6)
 rightCorners.Parent = rightPanel
 
 -- ============================================================
---  TABS (вкладки тоже на Jura)
+--  TABS (GothamMedium)
 -- ============================================================
 local tabButtons = {}
 local tabNames = {"Games", "Player", "Misc", "Combat"}
@@ -192,7 +188,7 @@ local function createTabButton(name)
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(200, 200, 200)
     btn.TextSize = 14
-    btn.Font = Enum.Font.JuraMedium   -- вкладки — JuraMedium
+    btn.Font = Enum.Font.GothamMedium
     btn.Parent = leftPanel
 
     local btnCorners = Instance.new("UICorner")
@@ -261,7 +257,7 @@ tabButtons["Games"].BackgroundTransparency = 0.1
 tabButtons["Games"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
 -- ============================================================
---  FOOTER (тоже Jura)
+--  FOOTER (GothamMedium)
 -- ============================================================
 local footer = Instance.new("Frame")
 footer.Size = UDim2.new(1, 0, 0, 35)
@@ -292,9 +288,9 @@ footerText.BackgroundTransparency = 1
 footerText.Text = "script By | tormentor412"
 footerText.TextColor3 = Color3.fromRGB(150, 150, 150)
 footerText.TextSize = 14
-footerText.Font = Enum.Font.JuraMedium   -- футер тоже Jura
+footerText.Font = Enum.Font.GothamMedium
 footerText.TextXAlignment = Enum.TextXAlignment.Center
 footerText.TextYAlignment = Enum.TextYAlignment.Center
 footerText.Parent = footer
 
-print("✅ AQWARIUM SCRIPT (шрифт Jura) загружен!")
+print("✅ AQWARIUM SCRIPT (шрифты Gotham) загружен!")
