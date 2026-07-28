@@ -1,13 +1,14 @@
 -- =====================================================
---  Aqwarium HUB (Minimal, thin, no close buttons)
+--  AQWARIUM SCRIPT (Minimal, thin, no close buttons)
 --  Tabs: Games | Player | Misc | Combat
 --  Footer: script By | tormentor412
 --  LOGO 32x32 with rounded corners (UICorner)
+--  Font: SourceSansBold (like AX-SCRIPTS)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
 local gui = Instance.new("ScreenGui")
-gui.Name = "AqwariumHub"
+gui.Name = "AqwariumScript"
 gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
@@ -106,9 +107,8 @@ if logoPath then
     logo.ZIndex = 15
     logo.Parent = header
 
-    -- СКРУГЛЕНИЕ УГЛОВ ЛОГОТИПА (радиус 8 пикселей)
     local logoCorner = Instance.new("UICorner")
-    logoCorner.CornerRadius = UDim.new(0, 8)   -- можешь изменить на 6, 10, 12 и т.д.
+    logoCorner.CornerRadius = UDim.new(0, 8)
     logoCorner.Parent = logo
 
     print("🖼️ Логотип 32x32 с мягкими углами")
@@ -116,15 +116,15 @@ else
     print("❌ Логотип не загружен")
 end
 
--- Заголовок текста (со смещением вправо, чтобы не перекрывать логотип)
+-- Заголовок текста (AQWARIUM SCRIPT, SourceSansBold)
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, -50, 1, 0)
 title.Position = UDim2.new(0, 50, 0, 0)
 title.BackgroundTransparency = 1
-title.Text = "Aqwarium HUB"
+title.Text = "AQWARIUM SCRIPT"   -- заглавные буквы
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextSize = 22
-title.Font = Enum.Font.GothamMedium
+title.Font = Enum.Font.SourceSansBold   -- шрифт как в AX-SCRIPTS
 title.TextXAlignment = Enum.TextXAlignment.Center
 title.TextYAlignment = Enum.TextYAlignment.Center
 title.Parent = header
@@ -192,7 +192,7 @@ local function createTabButton(name)
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(200, 200, 200)
     btn.TextSize = 14
-    btn.Font = Enum.Font.GothamMedium
+    btn.Font = Enum.Font.SourceSans   -- обычный SourceSans для кнопок
     btn.Parent = leftPanel
 
     local btnCorners = Instance.new("UICorner")
@@ -292,9 +292,9 @@ footerText.BackgroundTransparency = 1
 footerText.Text = "script By | tormentor412"
 footerText.TextColor3 = Color3.fromRGB(150, 150, 150)
 footerText.TextSize = 14
-footerText.Font = Enum.Font.GothamMedium
+footerText.Font = Enum.Font.SourceSans   -- тоже SourceSans
 footerText.TextXAlignment = Enum.TextXAlignment.Center
 footerText.TextYAlignment = Enum.TextYAlignment.Center
 footerText.Parent = footer
 
-print("✅ Aqwarium HUB (логотип с мягкими углами) загружен!")
+print("✅ AQWARIUM SCRIPT загружен! (шрифт SourceSans, заголовок заглавными)")
