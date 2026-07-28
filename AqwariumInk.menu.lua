@@ -3,7 +3,6 @@
 --  Tabs: Games | Players | Misc | Combat
 --  Footer: script By | tormentor412
 --  LOGO 32x32 с закруглёнными углами
---  Надпись рядом с логотипом (слева)
 -- =====================================================
 
 local player = game:GetService("Players").LocalPlayer
@@ -93,9 +92,7 @@ local headerCorners = Instance.new("UICorner")
 headerCorners.CornerRadius = UDim.new(0, 12)
 headerCorners.Parent = header
 
--- ============================================================
---  ЛОГОТИП (слева)
--- ============================================================
+-- Логотип
 if logoPath then
     local logo = Instance.new("ImageLabel")
     logo.Name = "MenuLogoIcon"
@@ -110,13 +107,9 @@ if logoPath then
     local logoCorner = Instance.new("UICorner")
     logoCorner.CornerRadius = UDim.new(0, 8)
     logoCorner.Parent = logo
-
-    print("🖼️ Логотип загружен")
-else
-    print("❌ Логотип не загружен")
 end
 
--- Заголовок (AQWARIUM SCRIPT) — рядом с логотипом
+-- Заголовок
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(0, 220, 1, 0)
 title.Position = UDim2.new(0, 48, 0, 0)
@@ -175,10 +168,10 @@ rightCorners.CornerRadius = UDim.new(0, 6)
 rightCorners.Parent = rightPanel
 
 -- ============================================================
---  TABS (GothamMedium) — изменён порядок: Games, Players, Misc, Combat
+--  TABS (Games, Players, Misc, Combat) — БЕЗ "секунд"!
 -- ============================================================
 local tabButtons = {}
-local tabNames = {"Games", "Players", "Misc", "Combat"}   -- заменено Player → Players
+local tabNames = {"Games", "Players", "Misc", "Combat"}
 
 local function createTabButton(name)
     local btn = Instance.new("TextButton")
@@ -258,7 +251,7 @@ tabButtons["Games"].BackgroundTransparency = 0.1
 tabButtons["Games"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
 -- ============================================================
---  FOOTER (GothamMedium)
+--  FOOTER
 -- ============================================================
 local footer = Instance.new("Frame")
 footer.Size = UDim2.new(1, 0, 0, 35)
@@ -294,4 +287,4 @@ footerText.TextXAlignment = Enum.TextXAlignment.Center
 footerText.TextYAlignment = Enum.TextYAlignment.Center
 footerText.Parent = footer
 
-print("✅ AQWARIUM SCRIPT (вкладки: Games, Players, Misc, Combat) загружен!")
+print("✅ AQWARIUM SCRIPT загружен! Вкладки: Games, Players, Misc, Combat")
